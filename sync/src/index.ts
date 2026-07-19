@@ -142,8 +142,8 @@ function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): De
   const today = dateStringInTz(new Date());
   const horizon = addDays(today, LOOKAHEAD_DAYS);
 
-  // Chore assignments: one all-day event per (member, week) on the day the
-  // chore week starts (Friday with the Fri–Thu block).
+  // Chore assignments: one all-day event per (member, week) spanning the
+  // encouraged window — Friday through Monday (end.date is exclusive).
   const startWeek = addWeeks(currentWeekKey(), -CHORE_WEEKS_BACK);
   for (let i = 0; i <= CHORE_WEEKS_BACK + CHORE_WEEKS_AHEAD; i++) {
     const week = addWeeks(startWeek, i);
@@ -165,7 +165,7 @@ function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): De
           ]),
         ].join("\n"),
         start: { date: blockStart },
-        end: { date: addDays(blockStart, 1) },
+        end: { date: addDays(blockStart, 4) },
       });
     }
   }
