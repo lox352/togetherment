@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+# Collapse bursts of webhook-triggered dispatches: at most one running run
+# plus one queued run; the queued run reads the latest Firestore state anyway.
+concurrency:
+  group: calendar-sync
+
 jobs:
   sync:
     runs-on: ubuntu-latest

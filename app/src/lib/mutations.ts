@@ -15,6 +15,15 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { requestCalendarSync } from "./triggerSync";
+
+/** Writes that change what's on the shared calendar also request a sync. */
+function withSync<T>(write: Promise<T>): Promise<T> {
+  return write.then((result) => {
+    requestCalendarSync();
+    return result;
+  });
+}
 
 // --- chores / rota ---
 
@@ -40,15 +49,17 @@ export function createSwap(input: {
   note?: string;
   createdBy: string;
 }) {
-  return addDoc(collection(db, "swaps"), {
-    ...input,
-    note: input.note ?? null,
-    createdAt: serverTimestamp(),
-  });
+  return withSync(
+    addDoc(collection(db, "swaps"), {
+      ...input,
+      note: input.note ?? null,
+      createdAt: serverTimestamp(),
+    }),
+  );
 }
 
 export function deleteSwap(id: string) {
-  return deleteDoc(doc(db, "swaps", id));
+  return withSync(deleteDoc(doc(db, "swaps", id)));
 }
 
 /**
@@ -56,19 +67,21 @@ export function deleteSwap(id: string) {
  * change per week; rules allow revising an epoch until it takes effect.
  */
 export function saveEpoch(epoch: RotaEpoch, createdBy: string) {
-  return setDoc(doc(db, "rotaEpochs", epoch.startWeek), {
-    startWeek: epoch.startWeek,
-    memberIds: epoch.memberIds,
-    chores: epoch.chores.map((c: Chore) => ({
-      id: c.id,
-      name: c.name,
-      ...(c.description ? { description: c.description } : {}),
-    })),
-    startOffset: epoch.startOffset,
-    startAtMillis: weekStartUtcMillis(epoch.startWeek),
-    createdBy,
-    createdAt: serverTimestamp(),
-  });
+  return withSync(
+    setDoc(doc(db, "rotaEpochs", epoch.startWeek), {
+      startWeek: epoch.startWeek,
+      memberIds: epoch.memberIds,
+      chores: epoch.chores.map((c: Chore) => ({
+        id: c.id,
+        name: c.name,
+        ...(c.description ? { description: c.description } : {}),
+      })),
+      startOffset: epoch.startOffset,
+      startAtMillis: weekStartUtcMillis(epoch.startWeek),
+      createdBy,
+      createdAt: serverTimestamp(),
+    }),
+  );
 }
 
 // --- shopping ---
@@ -144,20 +157,22 @@ export function addAvailability(input: {
   note?: string;
   createdBy: string;
 }) {
-  return addDoc(collection(db, "availability"), {
-    kind: input.kind,
-    memberUid: input.memberUid,
-    ...(input.guestName ? { guestName: input.guestName } : {}),
-    startDate: input.startDate,
-    endDate: input.endDate,
-    ...(input.note ? { note: input.note } : {}),
-    createdBy: input.createdBy,
-    createdAt: serverTimestamp(),
-  });
+  return withSync(
+    addDoc(collection(db, "availability"), {
+      kind: input.kind,
+      memberUid: input.memberUid,
+      ...(input.guestName ? { guestName: input.guestName } : {}),
+      startDate: input.startDate,
+      endDate: input.endDate,
+      ...(input.note ? { note: input.note } : {}),
+      createdBy: input.createdBy,
+      createdAt: serverTimestamp(),
+    }),
+  );
 }
 
 export function deleteAvailability(id: string) {
-  return deleteDoc(doc(db, "availability", id));
+  return withSync(deleteDoc(doc(db, "availability", id)));
 }
 
 // --- gatherings ---
@@ -170,16 +185,18 @@ export function addGathering(input: {
   description?: string;
   proposedBy: string;
 }) {
-  return addDoc(collection(db, "gatherings"), {
-    title: input.title,
-    date: input.date,
-    ...(input.time ? { time: input.time } : {}),
-    kind: input.kind,
-    ...(input.description ? { description: input.description } : {}),
-    proposedBy: input.proposedBy,
-    createdAt: serverTimestamp(),
-    rsvps: {},
-  });
+  return withSync(
+    addDoc(collection(db, "gatherings"), {
+      title: input.title,
+      date: input.date,
+      ...(input.time ? { time: input.time } : {}),
+      kind: input.kind,
+      ...(input.description ? { description: input.description } : {}),
+      proposedBy: input.proposedBy,
+      createdAt: serverTimestamp(),
+      rsvps: {},
+    }),
+  );
 }
 
 export function setRsvp(id: string, uid: string, value: "yes" | "no" | "maybe") {
@@ -187,5 +204,5 @@ export function setRsvp(id: string, uid: string, value: "yes" | "no" | "maybe") 
 }
 
 export function deleteGathering(id: string) {
-  return deleteDoc(doc(db, "gatherings", id));
+  return withSync(deleteDoc(doc(db, "gatherings", id)));
 }

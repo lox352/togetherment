@@ -5,3 +5,10 @@
  */
 export const CALENDAR_ID =
   "2e4fb63d96f3bf9e04011f494076958a62c6d627f1ab01ab601ac1296fff2774@group.calendar.google.com";
+
+/**
+ * Apps Script webhook that triggers the calendar sync workflow immediately
+ * after a change (see sync/apps-script/README.md). Leave empty to rely on the
+ * nightly scheduled sync only.
+ */
+export const SYNC_WEBHOOK_URL = "";

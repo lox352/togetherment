@@ -13,6 +13,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useEpochs, useMembers } from "../hooks/useHouseholdData";
 import { firstName, formatDay } from "../lib/format";
 import { saveEpoch } from "../lib/mutations";
+import { requestCalendarSyncNow, syncWebhookConfigured } from "../lib/triggerSync";
 
 const DEFAULT_CHORES: Chore[] = [
   { id: "mop", name: "Mop everywhere" },
@@ -41,6 +42,7 @@ export default function SettingsPage() {
   const [memberOrder, setMemberOrder] = useState<string[] | null>(null);
   const [newChore, setNewChore] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [syncRequested, setSyncRequested] = useState(false);
 
   const loading = epochs === undefined || members === undefined;
   const currentWeek = currentWeekKey();
@@ -221,6 +223,26 @@ export default function SettingsPage() {
             <p style={{ wordBreak: "break-all" }}>
               <code>{CALENDAR_ID}</code>
             </p>
+            {syncWebhookConfigured && (
+              <>
+                <p className="muted">
+                  The calendar updates automatically a minute or two after rota,
+                  travel or gathering changes, and every night as a backstop.
+                </p>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    requestCalendarSyncNow();
+                    setSyncRequested(true);
+                  }}
+                >
+                  Sync calendar now
+                </button>
+                {syncRequested && (
+                  <p className="muted">Requested — give it a minute or two.</p>
+                )}
+              </>
+            )}
           </div>
         </>
       )}

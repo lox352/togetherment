@@ -94,6 +94,13 @@ deploys automatically (tests must pass). If your repo isn't at
 The sync runs daily; after a swap or new trip, trigger it immediately via
 Actions → "Sync Google Calendar" → Run workflow.
 
+### 5b. Instant sync webhook (optional)
+
+For the calendar to update within a minute or two of any change (instead of
+nightly), deploy the Apps Script webhook — one-time setup for the repo owner,
+zero setup for housemates. Follow `sync/apps-script/README.md`, then paste the
+web app URL into `SYNC_WEBHOOK_URL` in `app/src/config.ts`.
+
 ### 6. First run
 
 Each housemate signs in once (Google popup). Then one person opens
