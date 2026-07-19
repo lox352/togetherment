@@ -1,9 +1,9 @@
 import {
   addWeeks,
+  choreWeekEndDate,
+  choreWeekStartDate,
   computeWeek,
   currentWeekKey,
-  mondayOfWeek,
-  sundayOfWeek,
 } from "@togetherment/shared";
 import { useState } from "react";
 import SwapDialog from "../components/SwapDialog";
@@ -39,7 +39,7 @@ export default function RotaPage() {
         <div className="title">
           {weekOffset === 0 ? "This week" : weekOffset === 1 ? "Next week" : weekKey}
           <div className="muted">
-            {formatDay(mondayOfWeek(weekKey))} – {formatDay(sundayOfWeek(weekKey))}
+            {formatDay(choreWeekStartDate(weekKey))} – {formatDay(choreWeekEndDate(weekKey))}
           </div>
         </div>
         <button className="btn btn-small" onClick={() => setWeekOffset((o) => o + 1)}>→</button>

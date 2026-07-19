@@ -1,8 +1,8 @@
 import {
+  choreWeekEndDate,
+  choreWeekStartDate,
   computeWeek,
   currentWeekKey,
-  mondayOfWeek,
-  sundayOfWeek,
 } from "@togetherment/shared";
 import { Link } from "react-router-dom";
 import WeekChores from "../components/WeekChores";
@@ -52,12 +52,13 @@ export default function DashboardPage() {
       <h1>
         This week{" "}
         <span className="muted">
-          {formatDay(mondayOfWeek(weekKey))} – {formatDay(sundayOfWeek(weekKey))}
+          {formatDay(choreWeekStartDate(weekKey))} – {formatDay(choreWeekEndDate(weekKey))}
         </span>
       </h1>
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>My chores</h2>
+        <p className="muted">New week every Friday — aim to be done by Monday night.</p>
         {!week || !week.epoch ? (
           <p className="muted">
             No rota yet — set up chores in <Link to="/settings">Settings</Link>.

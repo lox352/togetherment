@@ -10,8 +10,9 @@ service cloud.firestore {
       return request.auth != null
         && request.auth.token.email_verified
         && request.auth.token.email in [
-             'lachlan.sh@gmail.com'
-             // TODO: add each housemate's Google account email here
+             'lachlan.sh@gmail.com',
+             'stefano.pizzoli9898@gmail.com',
+             'alexchin13@gmail.com'
            ];
     }
 
@@ -23,7 +24,7 @@ service cloud.firestore {
     }
 
     // Rota config history is append-only: editing config = adding a new epoch
-    // effective next Monday. An epoch that hasn't taken effect yet (its
+    // effective from the next chore week. An epoch that hasn't taken effect yet (its
     // startAtMillis is still in the future) may be revised; past epochs are
     // locked so history and the calendar never rewrite themselves.
     match /rotaEpochs/{startWeek} {

@@ -7,11 +7,11 @@
  */
 import {
   addWeeks,
+  choreWeekStartDate,
   computeWeek,
   currentWeekKey,
   dateStringInTz,
   HOUSEHOLD_TZ,
-  mondayOfWeek,
   type AvailabilityEntry,
   type Gathering,
   type Member,
@@ -142,13 +142,14 @@ function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): De
   const today = dateStringInTz(new Date());
   const horizon = addDays(today, LOOKAHEAD_DAYS);
 
-  // Chore assignments: one all-day event per (member, week) on the Monday.
+  // Chore assignments: one all-day event per (member, week) on the day the
+  // chore week starts (Friday with the Fri–Thu block).
   const startWeek = addWeeks(currentWeekKey(), -CHORE_WEEKS_BACK);
   for (let i = 0; i <= CHORE_WEEKS_BACK + CHORE_WEEKS_AHEAD; i++) {
     const week = addWeeks(startWeek, i);
     const computed = computeWeek({ epochs, week, swaps, overrides });
     if (!computed.epoch) continue;
-    const monday = mondayOfWeek(week);
+    const blockStart = choreWeekStartDate(week);
     for (const [uid, assignments] of computed.byMember) {
       const choreNames = assignments.map((a) => a.chore.name);
       const swapped = assignments.some((a) => a.swapped || a.overridden);
@@ -156,13 +157,14 @@ function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): De
         id: eventId(`chore|${week}|${uid}`),
         summary: `Chores: ${firstName(members, uid)} — ${choreNames.join(", ")}`,
         description: [
-          `Week ${week}${swapped ? " (includes swapped chores)" : ""}`,
+          `Chore week ${week} (Fri–Thu)${swapped ? " — includes swapped chores" : ""}`,
+          "Aim to be done by Monday night.",
           ...assignments.map((a) =>
             a.chore.description ? `• ${a.chore.name}: ${a.chore.description}` : `• ${a.chore.name}`,
           ),
         ].join("\n"),
-        start: { date: monday },
-        end: { date: addDays(monday, 1) },
+        start: { date: blockStart },
+        end: { date: addDays(blockStart, 1) },
       });
     }
   }

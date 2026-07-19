@@ -1,4 +1,4 @@
-import { HOUSEHOLD_TZ } from "./config";
+import { CHORE_WEEK_START_OFFSET_DAYS, HOUSEHOLD_TZ } from "./config";
 
 /** ISO week key, e.g. "2026-W30". Zero-padded so string comparison sorts correctly. */
 export type WeekKey = string;
@@ -48,9 +48,25 @@ export function weekKeyOfDateString(dateStr: string): WeekKey {
   return formatWeekKey(isoWeekOfDate(y, m, d));
 }
 
-/** The household's current ISO week (computed in HOUSEHOLD_TZ regardless of device timezone). */
+export function addDaysToDateString(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) throw new Error(`Invalid date string: ${dateStr}`);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/** The chore week a given calendar date falls in (respects the block offset). */
+export function choreWeekOfDateString(dateStr: string): WeekKey {
+  // Days between block start and the ISO Monday count toward the coming week,
+  // so shift the date forward past the offset before taking its ISO week.
+  return weekKeyOfDateString(addDaysToDateString(dateStr, -CHORE_WEEK_START_OFFSET_DAYS));
+}
+
+/**
+ * The household's current chore week (computed in HOUSEHOLD_TZ regardless of
+ * device timezone). With a -3 offset a new week begins every Friday.
+ */
 export function currentWeekKey(now: Date = new Date(), tz: string = HOUSEHOLD_TZ): WeekKey {
-  return weekKeyOfDateString(dateStringInTz(now, tz));
+  return choreWeekOfDateString(dateStringInTz(now, tz));
 }
 
 /** UTC millis of the Monday that starts the given ISO week. */
@@ -67,14 +83,29 @@ function utcMillisToDateString(t: number): string {
   return new Date(t).toISOString().slice(0, 10);
 }
 
-/** "YYYY-MM-DD" of the Monday starting the given week. */
+/** "YYYY-MM-DD" of the Monday of the given ISO week (ignores the block offset). */
 export function mondayOfWeek(key: WeekKey): string {
   return utcMillisToDateString(mondayUtcMillis(key));
 }
 
-/** "YYYY-MM-DD" of the Sunday ending the given week. */
+/** "YYYY-MM-DD" of the Sunday of the given ISO week (ignores the block offset). */
 export function sundayOfWeek(key: WeekKey): string {
   return utcMillisToDateString(mondayUtcMillis(key) + 6 * DAY_MS);
+}
+
+/** UTC millis when the chore week begins (block start, e.g. Friday 00:00 UTC). */
+export function weekStartUtcMillis(key: WeekKey): number {
+  return mondayUtcMillis(key) + CHORE_WEEK_START_OFFSET_DAYS * DAY_MS;
+}
+
+/** "YYYY-MM-DD" of the first day of the chore week (Friday with a -3 offset). */
+export function choreWeekStartDate(key: WeekKey): string {
+  return utcMillisToDateString(weekStartUtcMillis(key));
+}
+
+/** "YYYY-MM-DD" of the last day of the chore week (Thursday with a -3 offset). */
+export function choreWeekEndDate(key: WeekKey): string {
+  return utcMillisToDateString(weekStartUtcMillis(key) + 6 * DAY_MS);
 }
 
 /** Whole weeks from week `a` to week `b` (positive if b is later). */

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  addDaysToDateString,
   addWeeks,
+  choreWeekEndDate,
+  choreWeekOfDateString,
+  choreWeekStartDate,
   currentWeekKey,
   dateStringInTz,
   formatWeekKey,
@@ -81,11 +85,33 @@ describe("isoWeeksBetween / addWeeks", () => {
   });
 });
 
+describe("chore-week blocks (Fri–Thu with the -3 offset)", () => {
+  it("starts each block on the Friday before the ISO Monday", () => {
+    // Week 2026-W30 has ISO Monday 20 Jul; the chore block runs Fri 17 – Thu 23.
+    expect(choreWeekStartDate("2026-W30")).toBe("2026-07-17");
+    expect(choreWeekEndDate("2026-W30")).toBe("2026-07-23");
+  });
+
+  it("assigns dates to blocks: Friday flips to the new week, Thursday closes the old one", () => {
+    expect(choreWeekOfDateString("2026-07-16")).toBe("2026-W29"); // Thu
+    expect(choreWeekOfDateString("2026-07-17")).toBe("2026-W30"); // Fri — new block
+    expect(choreWeekOfDateString("2026-07-20")).toBe("2026-W30"); // Mon
+    expect(choreWeekOfDateString("2026-07-23")).toBe("2026-W30"); // Thu
+    expect(choreWeekOfDateString("2026-07-24")).toBe("2026-W31"); // Fri — next block
+  });
+
+  it("blocks are contiguous across the year boundary", () => {
+    const start = choreWeekStartDate("2021-W01");
+    expect(addDaysToDateString(choreWeekEndDate("2020-W53"), 1)).toBe(start);
+  });
+});
+
 describe("timezone-aware current week", () => {
-  it("computes the week from the date as seen in the household timezone", () => {
-    // 2026-07-20T03:00Z is Mon 20 Jul in UTC but still Sun 19 Jul in New York
-    const instant = new Date("2026-07-20T03:00:00Z");
-    expect(dateStringInTz(instant, "America/New_York")).toBe("2026-07-19");
+  it("computes the block from the date as seen in the household timezone", () => {
+    // 2026-07-17T03:00Z is Fri 17 Jul in UTC but still Thu 16 Jul in New York:
+    // UTC has rolled into the new Fri–Thu block, New York hasn't.
+    const instant = new Date("2026-07-17T03:00:00Z");
+    expect(dateStringInTz(instant, "America/New_York")).toBe("2026-07-16");
     expect(currentWeekKey(instant, "America/New_York")).toBe("2026-W29");
     expect(currentWeekKey(instant, "UTC")).toBe("2026-W30");
     expect(currentWeekKey(instant, "Asia/Tokyo")).toBe("2026-W30");

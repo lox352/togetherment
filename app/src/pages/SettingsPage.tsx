@@ -1,7 +1,7 @@
 import {
+  choreWeekStartDate,
   continuedStartOffset,
   currentWeekKey,
-  mondayOfWeek,
   nextEpochStartWeek,
   resolveEpoch,
   type Chore,
@@ -46,7 +46,7 @@ export default function SettingsPage() {
   const currentWeek = currentWeekKey();
   const currentEpoch = loading ? null : resolveEpoch(epochs!, currentWeek);
   // First-ever epoch starts this week (usable immediately); later changes
-  // take effect next Monday so nobody's week changes underneath them.
+  // take effect from the next chore week so nobody's week changes underneath them.
   const isFirstEpoch = !loading && epochs!.length === 0;
   const targetWeek = isFirstEpoch ? currentWeek : nextEpochStartWeek(currentWeek);
   const pendingEpoch = loading
@@ -195,8 +195,8 @@ export default function SettingsPage() {
       <div className="card">
         <p className="muted">
           {isFirstEpoch
-            ? `This sets up the rota starting this week (w/c ${formatDay(mondayOfWeek(targetWeek))}).`
-            : `Changes take effect from Monday ${formatDay(mondayOfWeek(targetWeek))}. This week's assignments stay as they are.`}
+            ? `This sets up the rota starting this week (from ${formatDay(choreWeekStartDate(targetWeek))}).`
+            : `Changes take effect from ${formatDay(choreWeekStartDate(targetWeek))}. This week's assignments stay as they are.`}
           {pendingEpoch && " A pending change for that week already exists and will be replaced."}
         </p>
         <button className="btn btn-primary" onClick={() => void save()} disabled={!canSave}>

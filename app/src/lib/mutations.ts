@@ -1,5 +1,5 @@
 import {
-  mondayUtcMillis,
+  weekStartUtcMillis,
   type Chore,
   type RotaEpoch,
   type WeekKey,
@@ -65,7 +65,7 @@ export function saveEpoch(epoch: RotaEpoch, createdBy: string) {
       ...(c.description ? { description: c.description } : {}),
     })),
     startOffset: epoch.startOffset,
-    startAtMillis: mondayUtcMillis(epoch.startWeek),
+    startAtMillis: weekStartUtcMillis(epoch.startWeek),
     createdBy,
     createdAt: serverTimestamp(),
   });

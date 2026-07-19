@@ -151,7 +151,7 @@ export function continuedStartOffset(prev: RotaEpoch, newStartWeek: WeekKey): nu
   return prev.startOffset + isoWeeksBetween(prev.startWeek, newStartWeek);
 }
 
-/** Epochs take effect on Monday boundaries: config edits apply from next week. */
+/** Epochs take effect on chore-week boundaries: config edits apply from next week. */
 export function nextEpochStartWeek(currentWeek: WeekKey): WeekKey {
   return addWeeks(currentWeek, 1);
 }

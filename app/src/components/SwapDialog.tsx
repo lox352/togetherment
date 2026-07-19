@@ -1,7 +1,7 @@
 import {
   addWeeks,
+  choreWeekStartDate,
   currentWeekKey,
-  mondayOfWeek,
   type Member,
   type WeekKey,
 } from "@togetherment/shared";
@@ -54,7 +54,7 @@ export default function SwapDialog({ members, onClose }: Props) {
     }
   };
 
-  const weekLabel = (w: WeekKey) => `${w} (w/c ${formatDay(mondayOfWeek(w))})`;
+  const weekLabel = (w: WeekKey) => `${w} (from ${formatDay(choreWeekStartDate(w))})`;
 
   return (
     <div className="card">

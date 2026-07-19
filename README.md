@@ -10,11 +10,15 @@ Firestore, no Cloud Functions) · GitHub Actions for deploys and calendar sync.
 
 ## How the rota works
 
+- Chore weeks run **Friday–Thursday**: a new week starts going into the
+  weekend, and the house convention is to be done by Monday night. (Set by
+  `CHORE_WEEK_START_OFFSET_DAYS` in `packages/shared/src/config.ts`; weeks are
+  still keyed by ISO week internally.)
 - Assignments are **computed, never stored**: a deterministic round-robin maps
-  each ISO week to assignments, so the app and the calendar sync always agree.
+  each week to assignments, so the app and the calendar sync always agree.
 - Config lives in append-only **epochs** (`rotaEpochs`): editing chores or the
-  rotation order in Settings creates a snapshot effective next Monday. Past
-  weeks always resolve against the config active at the time.
+  rotation order in Settings creates a snapshot effective from the next chore
+  week. Past weeks always resolve against the config active at the time.
 - **Swaps** trade whole chore-weeks between two people (same-week trades work
   too) and can be undone by either party. Completions are ticked per chore.
 
