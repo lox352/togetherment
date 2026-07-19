@@ -1,0 +1,16 @@
+{
+  "name": "togetherment",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "app",
+    "sync"
+  ],
+  "scripts": {
+    "test": "npm run test --workspace=@togetherment/shared",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspace=app",
+    "dev": "npm run dev --workspace=app"
+  }
+}

@@ -1,0 +1,70 @@
+rules_version = '2';
+
+// Membership is this hardcoded allowlist. Adding/removing a housemate means
+// editing this list and running: firebase deploy --only firestore:rules
+// (Hardcoding avoids a billed get() on every request and any bootstrap
+// chicken-and-egg with a members doc.)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isMember() {
+      return request.auth != null
+        && request.auth.token.email_verified
+        && request.auth.token.email in [
+             'lachlan.sh@gmail.com'
+             // TODO: add each housemate's Google account email here
+           ];
+    }
+
+    match /members/{uid} {
+      allow read: if isMember();
+      // Each person manages only their own profile.
+      allow create, update: if isMember() && request.auth.uid == uid;
+      allow delete: if false;
+    }
+
+    // Rota config history is append-only: editing config = adding a new epoch
+    // effective next Monday. An epoch that hasn't taken effect yet (its
+    // startAtMillis is still in the future) may be revised; past epochs are
+    // locked so history and the calendar never rewrite themselves.
+    match /rotaEpochs/{startWeek} {
+      allow read, create: if isMember();
+      allow update: if isMember()
+        && resource.data.startAtMillis > request.time.toMillis()
+        && request.resource.data.startAtMillis == resource.data.startAtMillis;
+      allow delete: if false;
+    }
+
+    match /completions/{id} {
+      allow read: if isMember();
+      // Anyone in the house may mark any chore done (covering for travellers),
+      // but the record must truthfully say who ticked it and when.
+      allow create: if isMember()
+        && request.resource.data.completedBy == request.auth.uid
+        && request.resource.data.completedAt == request.time;
+      // Undo your own tick only.
+      allow delete: if isMember() && resource.data.completedBy == request.auth.uid;
+      allow update: if false;
+    }
+
+    match /swaps/{id} {
+      allow read: if isMember();
+      // The creator asserts both parties agreed (housemates trust each other).
+      allow create: if isMember() && request.resource.data.createdBy == request.auth.uid;
+      // Either party can undo the swap.
+      allow delete: if isMember()
+        && request.auth.uid in [resource.data.memberA, resource.data.memberB];
+      allow update: if false;
+    }
+
+    match /overrides/{id} {
+      allow read, create, delete: if isMember();
+      allow update: if false;
+    }
+
+    // Shared household lists: any member has full access.
+    match /shoppingItems/{id} { allow read, write: if isMember(); }
+    match /actionItems/{id}   { allow read, write: if isMember(); }
+    match /availability/{id}  { allow read, write: if isMember(); }
+    match /gatherings/{id}    { allow read, write: if isMember(); }
+  }
+}

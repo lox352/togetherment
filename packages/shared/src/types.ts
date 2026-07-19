@@ -1,0 +1,101 @@
+import type { WeekKey } from "./week";
+
+/**
+ * Engine-facing document shapes. The shared package has no Firebase dependency:
+ * timestamps appear as epoch millis. The app and sync script convert Firestore
+ * Timestamps to millis in their converters.
+ */
+
+export interface Chore {
+  id: string; // stable slug, e.g. "mop" — survives renames across epochs
+  name: string;
+  description?: string;
+}
+
+/**
+ * An append-only snapshot of rota configuration, effective from `startWeek`
+ * (always a Monday boundary). Doc ID in Firestore = startWeek.
+ */
+export interface RotaEpoch {
+  startWeek: WeekKey;
+  memberIds: string[]; // ordered — the rotation order
+  chores: Chore[]; // ordered
+  startOffset: number; // rotation phase at startWeek (carried over between epochs)
+}
+
+export interface SwapSpec {
+  id: string;
+  weekA: WeekKey;
+  memberA: string; // uid
+  weekB: WeekKey; // may equal weekA for a same-week trade
+  memberB: string; // uid
+  note?: string;
+  createdAtMillis: number;
+}
+
+/** Single-chore reassignment; trumps base + swaps. (Post-v1 UI, engine supports it.) */
+export interface OverrideSpec {
+  week: WeekKey;
+  choreId: string;
+  assigneeUid: string;
+}
+
+export interface CompletionSpec {
+  week: WeekKey;
+  choreId: string;
+  completedBy: string; // uid
+  completedAtMillis?: number;
+  assigneeUid?: string; // snapshot of who it was assigned to
+}
+
+export interface Member {
+  uid: string;
+  displayName: string;
+  email: string;
+  photoURL?: string;
+  active: boolean;
+}
+
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  note?: string;
+  addedBy: string;
+  addedAtMillis: number;
+  status: "needed" | "bought";
+  boughtBy?: string;
+  boughtAtMillis?: number;
+}
+
+export interface ActionItem {
+  id: string;
+  title: string;
+  assigneeUid: string;
+  createdBy: string;
+  createdAtMillis: number;
+  dueDate?: string; // "YYYY-MM-DD"
+  status: "open" | "done";
+  completedAtMillis?: number;
+}
+
+export interface AvailabilityEntry {
+  id: string;
+  kind: "away" | "guest";
+  memberUid: string; // who is away / who is hosting
+  guestName?: string; // kind === "guest" only
+  startDate: string; // "YYYY-MM-DD", inclusive
+  endDate: string; // "YYYY-MM-DD", inclusive
+  note?: string;
+  createdBy: string;
+}
+
+export interface Gathering {
+  id: string;
+  title: string;
+  date: string; // "YYYY-MM-DD"
+  time?: string; // "19:00" — absent means all-day
+  kind: "meal" | "activity";
+  description?: string;
+  proposedBy: string;
+  rsvps: Record<string, "yes" | "no" | "maybe">;
+}

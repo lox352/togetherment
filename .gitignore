@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+.env.*
+
+# Never commit service account keys (calendar sync uses GitHub Secrets)
+*service-account*.json
+*sa-key*.json
+*credentials*.json
+gcp-*.json
