@@ -3,4 +3,5 @@
  * paste the printed calendar ID here so Settings can show a subscribe link.
  * Leave empty to hide the calendar section.
  */
-export const CALENDAR_ID = "";
+export const CALENDAR_ID =
+  "2e4fb63d96f3bf9e04011f494076958a62c6d627f1ab01ab601ac1296fff2774@group.calendar.google.com";
