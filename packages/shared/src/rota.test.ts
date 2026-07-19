@@ -173,8 +173,65 @@ describe("overrides and completions", () => {
       week: "2026-W30",
       completions: [{ week: "2026-W30", choreId: "stove", completedBy: "bob" }],
     });
-    expect(w.assignments.find((a) => a.chore.id === "stove")?.completion?.completedBy).toBe("bob");
-    expect(w.assignments.find((a) => a.chore.id === "mop")?.completion).toBeUndefined();
+    const stove = w.assignments.find((a) => a.chore.id === "stove")!;
+    expect(stove.completion?.completedBy).toBe("bob");
+    expect(stove.done).toBe(true);
+    const mop = w.assignments.find((a) => a.chore.id === "mop")!;
+    expect(mop.completion).toBeUndefined();
+    expect(mop.done).toBe(false);
+  });
+
+  it("chores with sub-tasks are done only when every sub-task is ticked", () => {
+    const bathroom = {
+      id: "bathroom",
+      name: "Clean the bathroom",
+      subtasks: [
+        { id: "toilet", name: "Clean toilet" },
+        { id: "sink", name: "Clean sink" },
+        { id: "bath", name: "Clean bath" },
+      ],
+    };
+    const e = epoch({ chores: [bathroom, ...CHORES.slice(0, 2)] });
+    const tick = (subtaskId: string) => ({
+      week: "2026-W30",
+      choreId: "bathroom",
+      subtaskId,
+      completedBy: "alice",
+    });
+
+    const partial = computeWeek({
+      epochs: [e],
+      week: "2026-W30",
+      completions: [tick("toilet"), tick("sink")],
+    });
+    const partialBathroom = partial.assignments.find((a) => a.chore.id === "bathroom")!;
+    expect(partialBathroom.done).toBe(false);
+    expect(Object.keys(partialBathroom.subtaskCompletions).sort()).toEqual(["sink", "toilet"]);
+
+    const full = computeWeek({
+      epochs: [e],
+      week: "2026-W30",
+      completions: [tick("toilet"), tick("sink"), tick("bath")],
+    });
+    expect(full.assignments.find((a) => a.chore.id === "bathroom")!.done).toBe(true);
+  });
+
+  it("a whole-chore tick does not complete a chore that has sub-tasks", () => {
+    const kitchen = {
+      id: "kitchen",
+      name: "Clean the kitchen",
+      subtasks: [
+        { id: "stove", name: "Clean stove top" },
+        { id: "fridge", name: "Empty the fridge of expired food" },
+      ],
+    };
+    const e = epoch({ chores: [kitchen] });
+    const w = computeWeek({
+      epochs: [e],
+      week: "2026-W30",
+      completions: [{ week: "2026-W30", choreId: "kitchen", completedBy: "alice" }],
+    });
+    expect(w.assignments[0]!.done).toBe(false);
   });
 
   it("groups byMember by final assignee", () => {

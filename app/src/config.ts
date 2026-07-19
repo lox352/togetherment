@@ -11,5 +11,5 @@ export const CALENDAR_ID =
  * after a change (see sync/apps-script/README.md). Leave empty to rely on the
  * nightly scheduled sync only.
  */
-export const SYNC_WEBHOOK_URL =
+export const SYNC_WEBHOOK_URL: string =
   "https://script.google.com/macros/s/AKfycbyYZxie2m3DdLySbK96o1wmsRoQMi0v0ljFWcBw3qs9tBdM0YI6XsYpWbjkkzkN5jewBA/exec";

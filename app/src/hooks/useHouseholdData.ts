@@ -80,6 +80,7 @@ export function useCompletions(): CompletionSpec[] | undefined {
       return {
         week: d.week,
         choreId: d.choreId,
+        subtaskId: d.subtaskId ?? undefined,
         completedBy: d.completedBy,
         completedAtMillis: millis(d.completedAt),
         assigneeUid: d.assigneeUid ?? undefined,

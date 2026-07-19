@@ -19,9 +19,24 @@ const DEFAULT_CHORES: Chore[] = [
   { id: "mop", name: "Mop everywhere" },
   { id: "vacuum", name: "Vacuum everywhere" },
   { id: "dust", name: "Dust and clean surfaces", description: "Including the desk and window sills" },
-  { id: "bathroom", name: "Clean the toilet, sink and bath" },
-  { id: "stove", name: "Clean the stove" },
-  { id: "fridge", name: "Check the fridge", description: "Throw away mouldy things" },
+  {
+    id: "bathroom",
+    name: "Clean the bathroom",
+    subtasks: [
+      { id: "toilet", name: "Clean toilet" },
+      { id: "sink", name: "Clean sink" },
+      { id: "bath", name: "Clean bath" },
+    ],
+  },
+  {
+    id: "kitchen",
+    name: "Clean the kitchen",
+    subtasks: [
+      { id: "stove", name: "Clean stove top" },
+      { id: "sink", name: "Clean sink" },
+      { id: "fridge", name: "Empty the fridge of expired food" },
+    ],
+  },
 ];
 
 function slugify(name: string, taken: Set<string>): string {
@@ -41,6 +56,7 @@ export default function SettingsPage() {
   const [chores, setChores] = useState<Chore[] | null>(null);
   const [memberOrder, setMemberOrder] = useState<string[] | null>(null);
   const [newChore, setNewChore] = useState("");
+  const [newSubs, setNewSubs] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [syncRequested, setSyncRequested] = useState(false);
 
@@ -92,6 +108,21 @@ export default function SettingsPage() {
     setNewChore("");
   };
 
+  const updateChore = (index: number, patch: Partial<Chore>) => {
+    setChores(chores.map((c, j) => (j === index ? { ...c, ...patch } : c)));
+  };
+
+  const addSubtask = (index: number) => {
+    const chore = chores[index]!;
+    const name = (newSubs[chore.id] ?? "").trim();
+    if (!name) return;
+    const taken = new Set((chore.subtasks ?? []).map((s) => s.id));
+    updateChore(index, {
+      subtasks: [...(chore.subtasks ?? []), { id: slugify(name, taken), name }],
+    });
+    setNewSubs({ ...newSubs, [chore.id]: "" });
+  };
+
   const save = async () => {
     setStatus("saving");
     try {
@@ -118,16 +149,62 @@ export default function SettingsPage() {
       <h2>Chores</h2>
       <div className="card">
         {chores.map((c, i) => (
-          <div className="list-row" key={c.id}>
+          <div className="list-row subtask-group" key={c.id}>
             <div className="grow">
               <input
                 type="text"
                 value={c.name}
-                onChange={(e) =>
-                  setChores(chores.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))
-                }
+                onChange={(e) => updateChore(i, { name: e.target.value })}
               />
               {c.description && <div className="muted">{c.description}</div>}
+              <div className="subtasks">
+                {(c.subtasks ?? []).map((s, si) => (
+                  <div className="subtask-row" key={s.id}>
+                    <input
+                      type="text"
+                      value={s.name}
+                      onChange={(e) =>
+                        updateChore(i, {
+                          subtasks: c.subtasks!.map((x, sj) =>
+                            sj === si ? { ...x, name: e.target.value } : x,
+                          ),
+                        })
+                      }
+                    />
+                    <button
+                      className="btn btn-small btn-danger"
+                      onClick={() =>
+                        updateChore(i, {
+                          subtasks: c.subtasks!.filter((_, sj) => sj !== si),
+                        })
+                      }
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <div className="subtask-row">
+                  <input
+                    type="text"
+                    value={newSubs[c.id] ?? ""}
+                    placeholder="Add a sub-task…"
+                    onChange={(e) => setNewSubs({ ...newSubs, [c.id]: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addSubtask(i);
+                      }
+                    }}
+                  />
+                  <button
+                    className="btn btn-small"
+                    onClick={() => addSubtask(i)}
+                    disabled={!(newSubs[c.id] ?? "").trim()}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
             </div>
             <button
               className="btn btn-small btn-danger"

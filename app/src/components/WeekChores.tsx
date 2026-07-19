@@ -1,4 +1,4 @@
-import type { Member, WeekAssignments } from "@togetherment/shared";
+import type { ChoreAssignment, Member, WeekAssignments } from "@togetherment/shared";
 import { useAuth } from "../contexts/AuthContext";
 import { firstName } from "../lib/format";
 import { completeChore, uncompleteChore } from "../lib/mutations";
@@ -12,9 +12,119 @@ interface Props {
   onlyUid?: string;
 }
 
-export default function WeekChores({ week, members, ticksEnabled, onlyUid }: Props) {
-  const { user } = useAuth();
+function DoneBy({
+  completedBy,
+  assigneeUid,
+  members,
+}: {
+  completedBy: string;
+  assigneeUid: string;
+  members: Map<string, Member>;
+}) {
+  if (completedBy === assigneeUid) return null;
+  return <span className="muted"> · done by {firstName(members.get(completedBy), completedBy)}</span>;
+}
 
+function AssignmentRows({
+  a,
+  week,
+  members,
+  ticksEnabled,
+}: {
+  a: ChoreAssignment;
+  week: string;
+  members: Map<string, Member>;
+  ticksEnabled: boolean;
+}) {
+  const { user } = useAuth();
+  const subtasks = a.chore.subtasks ?? [];
+
+  if (subtasks.length === 0) {
+    const done = a.done;
+    return (
+      <div className="list-row">
+        {ticksEnabled && (
+          <button
+            className={`check ${done ? "check-done" : ""}`}
+            aria-label={done ? "Mark not done" : "Mark done"}
+            onClick={() =>
+              done
+                ? void uncompleteChore(week, a.chore.id)
+                : void completeChore(week, a.chore.id, user!.uid, a.assigneeUid)
+            }
+          >
+            ✓
+          </button>
+        )}
+        <div className="grow">
+          <span className={done ? "strike" : ""}>{a.chore.name}</span>
+          {a.chore.description && <div className="muted">{a.chore.description}</div>}
+          {a.completion && (
+            <DoneBy
+              completedBy={a.completion.completedBy}
+              assigneeUid={a.assigneeUid}
+              members={members}
+            />
+          )}
+        </div>
+        {a.swapped && <span className="badge badge-swap">swap</span>}
+        {a.overridden && <span className="badge badge-swap">reassigned</span>}
+      </div>
+    );
+  }
+
+  // Chore with sub-tasks: the parent tick is derived, only sub-tasks are tappable.
+  return (
+    <div className="list-row subtask-group">
+      {ticksEnabled && (
+        <span
+          className={`check check-derived ${a.done ? "check-done" : ""}`}
+          aria-label={a.done ? "All sub-tasks done" : "Sub-tasks remaining"}
+        >
+          ✓
+        </span>
+      )}
+      <div className="grow">
+        <span className={a.done ? "strike" : ""}>{a.chore.name}</span>
+        {a.chore.description && <div className="muted">{a.chore.description}</div>}
+        <div className="subtasks">
+          {subtasks.map((s) => {
+            const tick = a.subtaskCompletions[s.id];
+            return (
+              <div className="subtask-row" key={s.id}>
+                {ticksEnabled && (
+                  <button
+                    className={`check check-small ${tick ? "check-done" : ""}`}
+                    aria-label={tick ? `Mark ${s.name} not done` : `Mark ${s.name} done`}
+                    onClick={() =>
+                      tick
+                        ? void uncompleteChore(week, a.chore.id, s.id)
+                        : void completeChore(week, a.chore.id, user!.uid, a.assigneeUid, s.id)
+                    }
+                  >
+                    ✓
+                  </button>
+                )}
+                <span className={tick ? "strike" : ""}>{s.name}</span>
+                {tick && (
+                  <DoneBy
+                    completedBy={tick.completedBy}
+                    assigneeUid={a.assigneeUid}
+                    members={members}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {a.swapped && <span className="badge badge-swap">swap</span>}
+      {a.overridden && <span className="badge badge-swap">reassigned</span>}
+    </div>
+  );
+}
+
+export default function WeekChores({ week, members, ticksEnabled, onlyUid }: Props) {
   if (!week.epoch) {
     return <p className="muted">No rota configured for this week.</p>;
   }
@@ -28,40 +138,16 @@ export default function WeekChores({ week, members, ticksEnabled, onlyUid }: Pro
       {uids.map((uid) => (
         <div className="member-block" key={uid}>
           {!onlyUid && <div className="member-name">{firstName(members.get(uid), uid)}</div>}
-          {(week.byMember.get(uid) ?? []).map((a) => {
-            const done = !!a.completion;
-            return (
-              <div className="list-row" key={a.chore.id}>
-                {ticksEnabled && (
-                  <button
-                    className={`check ${done ? "check-done" : ""}`}
-                    aria-label={done ? "Mark not done" : "Mark done"}
-                    onClick={() =>
-                      done
-                        ? void uncompleteChore(week.week, a.chore.id)
-                        : void completeChore(week.week, a.chore.id, user!.uid, a.assigneeUid)
-                    }
-                  >
-                    ✓
-                  </button>
-                )}
-                <div className="grow">
-                  <span className={done ? "strike" : ""}>{a.chore.name}</span>
-                  {a.chore.description && <div className="muted">{a.chore.description}</div>}
-                  {done && a.completion!.completedBy !== a.assigneeUid && (
-                    <div className="muted">
-                      done by {firstName(members.get(a.completion!.completedBy), a.completion!.completedBy)}
-                    </div>
-                  )}
-                </div>
-                {a.swapped && <span className="badge badge-swap">swap</span>}
-                {a.overridden && <span className="badge badge-swap">reassigned</span>}
-              </div>
-            );
-          })}
-          {(week.byMember.get(uid) ?? []).length === 0 && (
-            <p className="muted">Week off 🎉</p>
-          )}
+          {(week.byMember.get(uid) ?? []).map((a) => (
+            <AssignmentRows
+              key={a.chore.id}
+              a={a}
+              week={week.week}
+              members={members}
+              ticksEnabled={ticksEnabled}
+            />
+          ))}
+          {(week.byMember.get(uid) ?? []).length === 0 && <p className="muted">Week off 🎉</p>}
         </div>
       ))}
     </div>

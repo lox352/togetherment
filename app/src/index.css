@@ -140,6 +140,12 @@ p { margin: 0.4rem 0; }
   color: transparent;
 }
 .check-done { background: var(--accent); border-color: var(--accent); color: #fff; }
+.check-small { width: 22px; height: 22px; font-size: 0.75rem; }
+.check-derived { cursor: default; display: inline-flex; align-items: center; justify-content: center; }
+
+.subtask-group { align-items: flex-start; }
+.subtasks { margin-top: 0.35rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.subtask-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.92rem; }
 
 input[type="text"], input[type="date"], input[type="time"], select, textarea {
   width: 100%;

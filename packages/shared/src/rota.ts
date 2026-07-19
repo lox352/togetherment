@@ -9,7 +9,12 @@ export interface ChoreAssignment {
   baseAssigneeUid: string;
   swapped: boolean;
   overridden: boolean;
+  /** Whole-chore tick (chores without sub-tasks). */
   completion?: CompletionSpec;
+  /** Per-sub-task ticks, keyed by subtask id (chores with sub-tasks). */
+  subtaskCompletions: Record<string, CompletionSpec>;
+  /** True when the chore counts as done: all sub-tasks ticked, or the whole-chore tick for simple chores. */
+  done: boolean;
 }
 
 export interface WeekAssignments {
@@ -57,6 +62,8 @@ export function baseAssignments(epoch: RotaEpoch, week: WeekKey): ChoreAssignmen
       baseAssigneeUid: uid,
       swapped: false,
       overridden: false,
+      subtaskCompletions: {},
+      done: false,
     };
   });
 }
@@ -119,19 +126,33 @@ export function computeWeek({
   const overrideByChore = new Map(
     overrides.filter((o) => o.week === week).map((o) => [o.choreId, o]),
   );
-  const completionByChore = new Map(
-    completions.filter((c) => c.week === week).map((c) => [c.choreId, c]),
-  );
+  const completionsByChore = new Map<string, CompletionSpec[]>();
+  for (const c of completions) {
+    if (c.week !== week) continue;
+    const list = completionsByChore.get(c.choreId) ?? [];
+    list.push(c);
+    completionsByChore.set(c.choreId, list);
+  }
 
   assignments = assignments.map((a) => {
-    const override = overrideByChore.get(a.chore.id);
-    const completion = completionByChore.get(a.chore.id);
     let result = a;
+    const override = overrideByChore.get(a.chore.id);
     if (override && override.assigneeUid !== a.assigneeUid) {
       result = { ...result, assigneeUid: override.assigneeUid, overridden: true };
     }
-    if (completion) result = { ...result, completion };
-    return result;
+
+    const choreCompletions = completionsByChore.get(a.chore.id) ?? [];
+    const completion = choreCompletions.find((c) => !c.subtaskId);
+    const subtaskCompletions: Record<string, CompletionSpec> = {};
+    for (const c of choreCompletions) {
+      if (c.subtaskId) subtaskCompletions[c.subtaskId] = c;
+    }
+    const subtasks = a.chore.subtasks ?? [];
+    const done =
+      subtasks.length > 0
+        ? subtasks.every((s) => subtaskCompletions[s.id] !== undefined)
+        : completion !== undefined;
+    return { ...result, completion, subtaskCompletions, done };
   });
 
   const byMember = new Map<string, ChoreAssignment[]>();

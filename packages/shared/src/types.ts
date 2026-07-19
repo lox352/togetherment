@@ -6,10 +6,20 @@ import type { WeekKey } from "./week";
  * Timestamps to millis in their converters.
  */
 
+export interface ChoreSubtask {
+  id: string; // stable slug within the chore, e.g. "toilet"
+  name: string;
+}
+
 export interface Chore {
   id: string; // stable slug, e.g. "mop" — survives renames across epochs
   name: string;
   description?: string;
+  /**
+   * Optional sub-tasks (e.g. bathroom → toilet/sink/bath). Each sub-task is
+   * ticked individually; the chore counts as done only when all are ticked.
+   */
+  subtasks?: ChoreSubtask[];
 }
 
 /**
@@ -43,6 +53,8 @@ export interface OverrideSpec {
 export interface CompletionSpec {
   week: WeekKey;
   choreId: string;
+  /** Set when this tick is for one sub-task of the chore. */
+  subtaskId?: string;
   completedBy: string; // uid
   completedAtMillis?: number;
   assigneeUid?: string; // snapshot of who it was assigned to

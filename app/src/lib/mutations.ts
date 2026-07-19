@@ -27,18 +27,30 @@ function withSync<T>(write: Promise<T>): Promise<T> {
 
 // --- chores / rota ---
 
-export function completeChore(week: WeekKey, choreId: string, uid: string, assigneeUid: string) {
-  return setDoc(doc(db, "completions", `${week}_${choreId}`), {
+// Chore ids are hyphenated slugs, so "_" separators are unambiguous.
+function completionDocId(week: WeekKey, choreId: string, subtaskId?: string) {
+  return subtaskId ? `${week}_${choreId}_${subtaskId}` : `${week}_${choreId}`;
+}
+
+export function completeChore(
+  week: WeekKey,
+  choreId: string,
+  uid: string,
+  assigneeUid: string,
+  subtaskId?: string,
+) {
+  return setDoc(doc(db, "completions", completionDocId(week, choreId, subtaskId)), {
     week,
     choreId,
+    ...(subtaskId ? { subtaskId } : {}),
     completedBy: uid,
     completedAt: serverTimestamp(),
     assigneeUid,
   });
 }
 
-export function uncompleteChore(week: WeekKey, choreId: string) {
-  return deleteDoc(doc(db, "completions", `${week}_${choreId}`));
+export function uncompleteChore(week: WeekKey, choreId: string, subtaskId?: string) {
+  return deleteDoc(doc(db, "completions", completionDocId(week, choreId, subtaskId)));
 }
 
 export function createSwap(input: {
@@ -75,6 +87,9 @@ export function saveEpoch(epoch: RotaEpoch, createdBy: string) {
         id: c.id,
         name: c.name,
         ...(c.description ? { description: c.description } : {}),
+        ...(c.subtasks?.length
+          ? { subtasks: c.subtasks.map((s) => ({ id: s.id, name: s.name })) }
+          : {}),
       })),
       startOffset: epoch.startOffset,
       startAtMillis: weekStartUtcMillis(epoch.startWeek),

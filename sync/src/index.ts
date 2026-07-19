@@ -159,9 +159,10 @@ function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): De
         description: [
           `Chore week ${week} (Fri–Thu)${swapped ? " — includes swapped chores" : ""}`,
           "Aim to be done by Monday night.",
-          ...assignments.map((a) =>
+          ...assignments.flatMap((a) => [
             a.chore.description ? `• ${a.chore.name}: ${a.chore.description}` : `• ${a.chore.name}`,
-          ),
+            ...(a.chore.subtasks ?? []).map((s) => `    – ${s.name}`),
+          ]),
         ].join("\n"),
         start: { date: blockStart },
         end: { date: addDays(blockStart, 1) },
