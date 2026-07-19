@@ -1,5 +1,7 @@
 import { useState } from "react";
+import Climbing from "../components/Climbing";
 import { useAuth } from "../contexts/AuthContext";
+import { EMPTY } from "../lib/charm";
 import { useMembers, useShoppingItems } from "../hooks/useHouseholdData";
 import { firstName, memberMap } from "../lib/format";
 import {
@@ -18,7 +20,13 @@ export default function ShoppingPage() {
   const byUid = memberMap(members);
   const [name, setName] = useState("");
 
-  if (items === undefined) return <div className="page">Loading…</div>;
+  if (items === undefined) {
+    return (
+      <div className="page">
+        <Climbing />
+      </div>
+    );
+  }
 
   const needed = items
     .filter((i) => i.status === "needed")
@@ -60,7 +68,7 @@ export default function ShoppingPage() {
       </form>
 
       <div className="card">
-        {needed.length === 0 && <p className="muted">Nothing needed right now.</p>}
+        {needed.length === 0 && <p className="muted">{EMPTY.shopping}</p>}
         {needed.map((i) => (
           <div className="list-row" key={i.id}>
             <button

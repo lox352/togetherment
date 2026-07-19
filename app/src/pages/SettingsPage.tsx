@@ -8,11 +8,14 @@ import {
   type RotaEpoch,
 } from "@togetherment/shared";
 import { useEffect, useState } from "react";
+import Avatar from "../components/Avatar";
+import Climbing from "../components/Climbing";
 import { CALENDAR_ID } from "../config";
 import { useAuth } from "../contexts/AuthContext";
 import { useEpochs, useMembers } from "../hooks/useHouseholdData";
+import { COLOR_PRESETS, EMOJI_PRESETS } from "../lib/charm";
 import { firstName, formatDay } from "../lib/format";
-import { saveEpoch } from "../lib/mutations";
+import { saveEpoch, updateMyStyle } from "../lib/mutations";
 import { requestCalendarSyncNow, syncWebhookConfigured } from "../lib/triggerSync";
 
 const DEFAULT_CHORES: Chore[] = [
@@ -85,10 +88,15 @@ export default function SettingsPage() {
   }, [loading]);
 
   if (loading || chores === null || memberOrder === null) {
-    return <div className="page">Loading…</div>;
+    return (
+      <div className="page">
+        <Climbing />
+      </div>
+    );
   }
 
   const byUid = new Map(members!.map((m) => [m.uid, m]));
+  const myProfile = user ? byUid.get(user.uid) : undefined;
   const inRota = new Set(memberOrder);
   const notInRota = members!.filter((m) => m.active && !inRota.has(m.uid));
 
@@ -238,6 +246,7 @@ export default function SettingsPage() {
       <div className="card">
         {memberOrder.map((uid, i) => (
           <div className="list-row" key={uid}>
+            <Avatar member={byUid.get(uid)} uid={uid} size="sm" />
             <div className="grow">{firstName(byUid.get(uid), uid)}</div>
             <button className="btn btn-small" onClick={() => move(i, -1)} disabled={i === 0}>↑</button>
             <button
@@ -324,9 +333,38 @@ export default function SettingsPage() {
         </>
       )}
 
+      <h2>My style</h2>
+      <div className="card">
+        <p className="muted">Pick your emoji and colour — they show up next to your name everywhere.</p>
+        <div className="chip-row">
+          {EMOJI_PRESETS.map((e) => (
+            <button
+              key={e}
+              className={`chip ${myProfile?.emoji === e ? "on" : ""}`}
+              onClick={() => void updateMyStyle(user!.uid, { emoji: e })}
+              aria-label={`Use ${e} as my emoji`}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+        <div className="chip-row">
+          {COLOR_PRESETS.map((c) => (
+            <button
+              key={c}
+              className={`chip ${myProfile?.color === c ? "on" : ""}`}
+              style={{ background: c }}
+              onClick={() => void updateMyStyle(user!.uid, { color: c })}
+              aria-label="Use this colour"
+            />
+          ))}
+        </div>
+      </div>
+
       <h2>Account</h2>
       <div className="card">
         <div className="list-row">
+          <Avatar member={myProfile} uid={user?.uid ?? ""} />
           <div className="grow">
             {user?.displayName}
             <div className="muted">{user?.email}</div>

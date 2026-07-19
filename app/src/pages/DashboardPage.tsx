@@ -4,9 +4,14 @@ import {
   computeWeek,
   currentWeekKey,
 } from "@togetherment/shared";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import Avatar from "../components/Avatar";
+import Climbing from "../components/Climbing";
 import WeekChores from "../components/WeekChores";
 import { useAuth } from "../contexts/AuthContext";
+import { CELEBRATION, greeting, weeklyTagline } from "../lib/charm";
+import { fireConfetti } from "../lib/confetti";
 import {
   useActionItems,
   useAvailability,
@@ -31,6 +36,17 @@ export default function DashboardPage() {
     computeWeek({ epochs: epochs!, week: weekKey, swaps, overrides, completions });
 
   const myChores = week && user ? (week.byMember.get(user.uid) ?? []) : [];
+  const allMineDone = !loading && myChores.length > 0 && myChores.every((a) => a.done);
+
+  // Confetti only on the false→true transition (not when the page loads
+  // with a week that's already finished).
+  const prevDone = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (loading) return;
+    if (prevDone.current === false && allMineDone) fireConfetti();
+    prevDone.current = allMineDone;
+  }, [allMineDone, loading]);
+
   const presentNow = (availability ?? []).filter(
     (a) => a.startDate <= today && today <= a.endDate,
   );
@@ -45,19 +61,34 @@ export default function DashboardPage() {
     (a) => a.status === "open" && a.assigneeUid === user?.uid,
   );
 
-  if (loading) return <div className="page">Loading…</div>;
+  if (loading) {
+    return (
+      <div className="page">
+        <Climbing />
+      </div>
+    );
+  }
+
+  const myFirstName = user?.displayName?.split(" ")[0] ?? "neighbour";
 
   return (
     <div className="page">
-      <h1>
-        This week{" "}
-        <span className="muted">
-          {formatDay(choreWeekStartDate(weekKey))} – {formatDay(choreWeekEndDate(weekKey))}
-        </span>
-      </h1>
+      <h1>{greeting(myFirstName)}</h1>
+      <p className="tagline">{weeklyTagline(weekKey)}</p>
 
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>My chores</h2>
+        <h2 style={{ marginTop: 0 }}>
+          My chores{" "}
+          <span className="muted" style={{ textTransform: "none", letterSpacing: 0 }}>
+            {formatDay(choreWeekStartDate(weekKey))} – {formatDay(choreWeekEndDate(weekKey))}
+          </span>
+        </h2>
+        {allMineDone && (
+          <div className="celebration">
+            <div className="headline">{CELEBRATION.headline}</div>
+            <div className="muted">{CELEBRATION.sub}</div>
+          </div>
+        )}
         <p className="muted">New week every Friday — aim to be done by Monday night.</p>
         {!week || !week.epoch ? (
           <p className="muted">
@@ -87,6 +118,7 @@ export default function DashboardPage() {
         )}
         {presentNow.map((a) => (
           <div className="list-row" key={a.id}>
+            <Avatar member={byUid.get(a.memberUid)} uid={a.memberUid} size="sm" />
             <div className="grow">
               {a.kind === "away"
                 ? `${firstName(byUid.get(a.memberUid), a.memberUid)} is away`
@@ -100,6 +132,7 @@ export default function DashboardPage() {
         ))}
         {upcomingAway.map((a) => (
           <div className="list-row" key={a.id}>
+            <Avatar member={byUid.get(a.memberUid)} uid={a.memberUid} size="sm" />
             <div className="grow">
               {a.kind === "away"
                 ? `${firstName(byUid.get(a.memberUid), a.memberUid)} away`

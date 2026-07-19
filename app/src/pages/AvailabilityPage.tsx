@@ -1,5 +1,7 @@
 import { useState } from "react";
+import Climbing from "../components/Climbing";
 import { useAuth } from "../contexts/AuthContext";
+import { EMPTY } from "../lib/charm";
 import { useAvailability, useMembers } from "../hooks/useHouseholdData";
 import { firstName, formatRange, memberMap, todayDateString } from "../lib/format";
 import { addAvailability, deleteAvailability } from "../lib/mutations";
@@ -19,7 +21,11 @@ export default function AvailabilityPage() {
   const [error, setError] = useState("");
 
   if (entries === undefined || members === undefined) {
-    return <div className="page">Loading…</div>;
+    return (
+      <div className="page">
+        <Climbing />
+      </div>
+    );
   }
 
   const today = todayDateString();
@@ -107,7 +113,7 @@ export default function AvailabilityPage() {
       </div>
 
       <div className="card">
-        {upcoming.length === 0 && <p className="muted">Nothing planned — full house.</p>}
+        {upcoming.length === 0 && <p className="muted">{EMPTY.availability}</p>}
         {upcoming.map((e) => (
           <div className="list-row" key={e.id}>
             <span className={`badge ${e.kind === "away" ? "badge-away" : "badge-guest"}`}>

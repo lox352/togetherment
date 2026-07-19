@@ -1,7 +1,9 @@
 import type { ChoreAssignment, Member, WeekAssignments } from "@togetherment/shared";
 import { useAuth } from "../contexts/AuthContext";
+import { choreEmoji, weekOffLine } from "../lib/charm";
 import { firstName } from "../lib/format";
 import { completeChore, uncompleteChore } from "../lib/mutations";
+import Avatar from "./Avatar";
 
 interface Props {
   week: WeekAssignments;
@@ -57,7 +59,9 @@ function AssignmentRows({
           </button>
         )}
         <div className="grow">
-          <span className={done ? "strike" : ""}>{a.chore.name}</span>
+          <span className={done ? "strike" : ""}>
+            {choreEmoji(a.chore)} {a.chore.name}
+          </span>
           {a.chore.description && <div className="muted">{a.chore.description}</div>}
           {a.completion && (
             <DoneBy
@@ -85,7 +89,9 @@ function AssignmentRows({
         </span>
       )}
       <div className="grow">
-        <span className={a.done ? "strike" : ""}>{a.chore.name}</span>
+        <span className={a.done ? "strike" : ""}>
+          {choreEmoji(a.chore)} {a.chore.name}
+        </span>
         {a.chore.description && <div className="muted">{a.chore.description}</div>}
         <div className="subtasks">
           {subtasks.map((s) => {
@@ -137,7 +143,12 @@ export default function WeekChores({ week, members, ticksEnabled, onlyUid }: Pro
     <div>
       {uids.map((uid) => (
         <div className="member-block" key={uid}>
-          {!onlyUid && <div className="member-name">{firstName(members.get(uid), uid)}</div>}
+          {!onlyUid && (
+            <div className="member-name">
+              <Avatar member={members.get(uid)} uid={uid} size="sm" />
+              {firstName(members.get(uid), uid)}
+            </div>
+          )}
           {(week.byMember.get(uid) ?? []).map((a) => (
             <AssignmentRows
               key={a.chore.id}
@@ -147,7 +158,9 @@ export default function WeekChores({ week, members, ticksEnabled, onlyUid }: Pro
               ticksEnabled={ticksEnabled}
             />
           ))}
-          {(week.byMember.get(uid) ?? []).length === 0 && <p className="muted">Week off 🎉</p>}
+          {(week.byMember.get(uid) ?? []).length === 0 && (
+            <p className="muted">{weekOffLine(week.week, uid)}</p>
+          )}
         </div>
       ))}
     </div>

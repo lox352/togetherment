@@ -1,0 +1,16 @@
+{
+  "name": "244 E 13",
+  "short_name": "244 E 13",
+  "description": "Chores, shopping and plans for the sixth floor.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6efe3",
+  "theme_color": "#a2402e",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏙️</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

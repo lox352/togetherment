@@ -1,5 +1,8 @@
 import { useState } from "react";
+import Avatar from "../components/Avatar";
+import Climbing from "../components/Climbing";
 import { useAuth } from "../contexts/AuthContext";
+import { EMPTY } from "../lib/charm";
 import { useActionItems, useMembers } from "../hooks/useHouseholdData";
 import { firstName, formatDay, memberMap } from "../lib/format";
 import { addActionItem, deleteActionItem, setActionItemStatus } from "../lib/mutations";
@@ -15,7 +18,11 @@ export default function ActionsPage() {
   const [dueDate, setDueDate] = useState("");
 
   if (items === undefined || members === undefined) {
-    return <div className="page">Loading…</div>;
+    return (
+      <div className="page">
+        <Climbing />
+      </div>
+    );
   }
 
   const activeMembers = members.filter((m) => m.active);
@@ -70,7 +77,7 @@ export default function ActionsPage() {
       </div>
 
       <div className="card">
-        {open.length === 0 && <p className="muted">Nothing outstanding.</p>}
+        {open.length === 0 && <p className="muted">{EMPTY.actions}</p>}
         {open.map((i) => (
           <div className="list-row" key={i.id}>
             <button
@@ -82,7 +89,8 @@ export default function ActionsPage() {
             </button>
             <div className="grow">
               {i.title}
-              <div className="muted">
+              <div className="muted" style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                <Avatar member={byUid.get(i.assigneeUid)} uid={i.assigneeUid} size="sm" />
                 {firstName(byUid.get(i.assigneeUid), i.assigneeUid)}
                 {i.dueDate ? ` · by ${formatDay(i.dueDate)}` : ""}
               </div>

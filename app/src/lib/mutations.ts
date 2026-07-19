@@ -99,6 +99,12 @@ export function saveEpoch(epoch: RotaEpoch, createdBy: string) {
   );
 }
 
+// --- member style ---
+
+export function updateMyStyle(uid: string, style: { emoji?: string; color?: string }) {
+  return setDoc(doc(db, "members", uid), style, { merge: true });
+}
+
 // --- shopping ---
 
 export function addShoppingItem(name: string, uid: string) {

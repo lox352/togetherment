@@ -1,4 +1,6 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import Climbing from "./components/Climbing";
+import WalkUp from "./components/WalkUp";
 import { useAuth } from "./contexts/AuthContext";
 import ActionsPage from "./pages/ActionsPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
@@ -20,10 +22,11 @@ function SignInScreen() {
   const { signIn } = useAuth();
   return (
     <div className="centered-screen">
-      <h1>Togetherment</h1>
-      <p>Chores, shopping and plans for the household.</p>
+      <WalkUp />
+      <h1>244 E 13</h1>
+      <p className="muted">Six floors up. Zero lifts. One very organised household.</p>
       <button className="btn btn-primary" onClick={() => void signIn()}>
-        Sign in with Google
+        Buzz in with Google
       </button>
     </div>
   );
@@ -33,7 +36,7 @@ function DeniedScreen() {
   const { user, signOut } = useAuth();
   return (
     <div className="centered-screen">
-      <h1>Not a housemate (yet)</h1>
+      <h1>The buzzer's not for you (yet)</h1>
       <p>
         <strong>{user?.email}</strong> isn't on the household allowlist. Ask
         whoever manages the app to add your email to the Firestore rules.
@@ -62,7 +65,11 @@ export default function App() {
   const { user, denied } = useAuth();
 
   if (user === undefined) {
-    return <div className="centered-screen">Loading…</div>;
+    return (
+      <div className="centered-screen">
+        <Climbing />
+      </div>
+    );
   }
   if (user === null) return <SignInScreen />;
   if (denied) return <DeniedScreen />;

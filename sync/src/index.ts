@@ -7,6 +7,7 @@
  */
 import {
   addWeeks,
+  choreEmoji,
   choreWeekStartDate,
   computeWeek,
   currentWeekKey,
@@ -155,12 +156,12 @@ function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): De
       const swapped = assignments.some((a) => a.swapped || a.overridden);
       events.push({
         id: eventId(`chore|${week}|${uid}`),
-        summary: `Chores: ${firstName(members, uid)} — ${choreNames.join(", ")}`,
+        summary: `🧹 Chores: ${firstName(members, uid)} — ${choreNames.join(", ")}`,
         description: [
           `Chore week ${week} (Fri–Thu)${swapped ? " — includes swapped chores" : ""}`,
           "Aim to be done by Monday night.",
           ...assignments.flatMap((a) => [
-            a.chore.description ? `• ${a.chore.name}: ${a.chore.description}` : `• ${a.chore.name}`,
+            `${choreEmoji(a.chore)} ${a.chore.name}${a.chore.description ? `: ${a.chore.description}` : ""}`,
             ...(a.chore.subtasks ?? []).map((s) => `    – ${s.name}`),
           ]),
         ].join("\n"),
@@ -175,8 +176,8 @@ function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): De
     if (a.endDate < today || a.startDate > horizon) continue;
     const summary =
       a.kind === "away"
-        ? `Away: ${firstName(members, a.memberUid)}`
-        : `Guest: ${a.guestName ?? "Guest"} (hosting: ${firstName(members, a.memberUid)})`;
+        ? `✈️ Away: ${firstName(members, a.memberUid)}`
+        : `🛏️ Guest: ${a.guestName ?? "Guest"} (hosting: ${firstName(members, a.memberUid)})`;
     events.push({
       id: eventId(`avail|${a.id}`),
       summary,
@@ -191,7 +192,7 @@ function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): De
     if (g.date < today || g.date > horizon) continue;
     const base = {
       id: eventId(`gath|${g.id}`),
-      summary: `House ${g.kind}: ${g.title}`,
+      summary: `${g.kind === "meal" ? "🍝" : "🎳"} House ${g.kind}: ${g.title}`,
       ...(g.description ? { description: g.description } : {}),
     };
     if (g.time) {

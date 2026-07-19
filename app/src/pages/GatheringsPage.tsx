@@ -1,5 +1,8 @@
 import { useState } from "react";
+import Avatar from "../components/Avatar";
+import Climbing from "../components/Climbing";
 import { useAuth } from "../contexts/AuthContext";
+import { EMPTY, RSVP_LABELS } from "../lib/charm";
 import { useGatherings, useMembers } from "../hooks/useHouseholdData";
 import { firstName, formatDay, memberMap, todayDateString } from "../lib/format";
 import { addGathering, deleteGathering, setRsvp } from "../lib/mutations";
@@ -21,7 +24,11 @@ export default function GatheringsPage() {
   const [error, setError] = useState("");
 
   if (gatherings === undefined || members === undefined) {
-    return <div className="page">Loading…</div>;
+    return (
+      <div className="page">
+        <Climbing />
+      </div>
+    );
   }
 
   const today = todayDateString();
@@ -103,7 +110,7 @@ export default function GatheringsPage() {
 
       <h2>Upcoming</h2>
       {upcoming.length === 0 && (
-        <div className="card"><p className="muted">Nothing planned yet.</p></div>
+        <div className="card"><p className="muted">{EMPTY.gatherings}</p></div>
       )}
       {upcoming.map((g) => (
         <div className="card" key={g.id}>
@@ -130,15 +137,27 @@ export default function GatheringsPage() {
                 className={g.rsvps[user!.uid] === opt ? "on" : ""}
                 onClick={() => void setRsvp(g.id, user!.uid, opt)}
               >
-                {opt}
+                {RSVP_LABELS[opt]}
               </button>
             ))}
           </div>
-          <div className="muted">
-            {members
-              .filter((m) => m.active && g.rsvps[m.uid])
-              .map((m) => `${firstName(m)}: ${g.rsvps[m.uid]}`)
-              .join(" · ") || "No RSVPs yet"}
+          <div
+            className="muted"
+            style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", alignItems: "center" }}
+          >
+            {members.filter((m) => m.active && g.rsvps[m.uid]).length === 0
+              ? "No RSVPs yet"
+              : members
+                  .filter((m) => m.active && g.rsvps[m.uid])
+                  .map((m) => (
+                    <span
+                      key={m.uid}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                    >
+                      <Avatar member={m} uid={m.uid} size="sm" />
+                      {firstName(m)}: {RSVP_LABELS[g.rsvps[m.uid]!]}
+                    </span>
+                  ))}
           </div>
         </div>
       ))}

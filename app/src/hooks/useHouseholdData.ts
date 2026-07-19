@@ -34,6 +34,8 @@ export function useMembers(): Member[] | undefined {
         email: d.email ?? "",
         photoURL: d.photoURL ?? undefined,
         active: d.active !== false,
+        emoji: d.emoji ?? undefined,
+        color: d.color ?? undefined,
       };
     },
   );

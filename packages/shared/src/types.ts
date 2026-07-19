@@ -66,6 +66,9 @@ export interface Member {
   email: string;
   photoURL?: string;
   active: boolean;
+  /** Personal flair chosen in Settings. */
+  emoji?: string;
+  color?: string;
 }
 
 export interface ShoppingItem {
