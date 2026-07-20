@@ -4,6 +4,7 @@ import {
   computeWeek,
   currentWeekKey,
 } from "@togetherment/shared";
+
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Avatar from "../components/Avatar";
@@ -11,6 +12,7 @@ import Climbing from "../components/Climbing";
 import WeekChores from "../components/WeekChores";
 import { useAuth } from "../contexts/AuthContext";
 import { CELEBRATION, greeting, weeklyTagline } from "../lib/charm";
+import { findClashes } from "../lib/clashes";
 import { fireConfetti } from "../lib/confetti";
 import {
   useActionItems,
@@ -61,6 +63,11 @@ export default function DashboardPage() {
     (a) => a.status === "open" && a.assigneeUid === user?.uid,
   );
 
+  const clashes =
+    loading || !user || availability === undefined
+      ? []
+      : findClashes(user.uid, epochs!, swaps!, overrides!, completions!, availability);
+
   if (loading) {
     return (
       <div className="page">
@@ -75,6 +82,22 @@ export default function DashboardPage() {
     <div className="page">
       <h1>{greeting(myFirstName)}</h1>
       <p className="tagline">{weeklyTagline(weekKey)}</p>
+
+      {clashes.map((c) => (
+        <div className="notice" key={c.week}>
+          <div className="headline">✈️ You're away during your chore week</div>
+          <p className="muted">
+            {c.week === weekKey ? "This week" : `The week from ${formatDay(choreWeekStartDate(c.week))}`}
+            {" you have "}
+            {c.choreCount} chore{c.choreCount === 1 ? "" : "s"}, but you're away{" "}
+            {formatRange(c.away.startDate, c.away.endDate)}
+            {c.missesWholeWindow ? " — the whole Friday-to-Monday stretch." : "."}
+          </p>
+          <Link to="/rota" className="btn btn-small">
+            Propose a swap
+          </Link>
+        </div>
+      ))}
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>

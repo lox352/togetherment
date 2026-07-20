@@ -13,6 +13,8 @@ import { createSwap } from "../lib/mutations";
 interface Props {
   members: Member[];
   onClose: () => void;
+  /** Preselect the week to give away (e.g. the one clashing with a trip). */
+  defaultWeekA?: WeekKey;
 }
 
 /** Weeks offered for swapping: this week plus the next 11. */
@@ -21,12 +23,14 @@ function swapWeekOptions(): WeekKey[] {
   return Array.from({ length: 12 }, (_, i) => addWeeks(current, i));
 }
 
-export default function SwapDialog({ members, onClose }: Props) {
+export default function SwapDialog({ members, onClose, defaultWeekA }: Props) {
   const { user } = useAuth();
   const weeks = swapWeekOptions();
   const others = members.filter((m) => m.active && m.uid !== user?.uid);
 
-  const [weekA, setWeekA] = useState<WeekKey>(weeks[0]!);
+  const [weekA, setWeekA] = useState<WeekKey>(
+    defaultWeekA && weeks.includes(defaultWeekA) ? defaultWeekA : weeks[0]!,
+  );
   const [memberB, setMemberB] = useState(others[0]?.uid ?? "");
   const [weekB, setWeekB] = useState<WeekKey>(weeks[0]!);
   const [note, setNote] = useState("");

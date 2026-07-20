@@ -5,21 +5,36 @@ import {
   computeWeek,
   currentWeekKey,
 } from "@togetherment/shared";
+
 import { useState } from "react";
+import Climbing from "../components/Climbing";
 import SwapDialog from "../components/SwapDialog";
 import WeekChores from "../components/WeekChores";
 import { useAuth } from "../contexts/AuthContext";
-import { useRotaData } from "../hooks/useHouseholdData";
+import { useAvailability, useRotaData } from "../hooks/useHouseholdData";
+import { findClashes } from "../lib/clashes";
 import { firstName, formatDay, memberMap } from "../lib/format";
 import { deleteSwap } from "../lib/mutations";
 
 export default function RotaPage() {
   const { user } = useAuth();
   const { epochs, swaps, overrides, completions, members, loading } = useRotaData();
+  const availability = useAvailability();
   const [weekOffset, setWeekOffset] = useState(0);
   const [swapOpen, setSwapOpen] = useState(false);
 
-  if (loading) return <div className="page">Loading…</div>;
+  if (loading) {
+    return (
+      <div className="page">
+        <Climbing />
+      </div>
+    );
+  }
+
+  const myClashes =
+    user && availability
+      ? findClashes(user.uid, epochs!, swaps!, overrides!, completions!, availability)
+      : [];
 
   const byUid = memberMap(members);
   const current = currentWeekKey();
@@ -56,12 +71,30 @@ export default function RotaPage() {
         <WeekChores week={week} members={byUid} ticksEnabled={weekOffset <= 0} />
       </div>
 
+      {myClashes.length > 0 && !swapOpen && (
+        <div className="notice">
+          <div className="headline">✈️ Away during your own chore week</div>
+          <p className="muted">
+            {myClashes
+              .map((c) => `${formatDay(choreWeekStartDate(c.week))} (${c.choreCount} chores)`)
+              .join(" · ")}
+          </p>
+          <button className="btn btn-small" onClick={() => setSwapOpen(true)}>
+            Propose a swap
+          </button>
+        </div>
+      )}
+
       {!swapOpen ? (
         <button className="btn btn-primary" onClick={() => setSwapOpen(true)}>
           Propose a swap
         </button>
       ) : (
-        <SwapDialog members={members ?? []} onClose={() => setSwapOpen(false)} />
+        <SwapDialog
+          members={members ?? []}
+          onClose={() => setSwapOpen(false)}
+          defaultWeekA={myClashes[0]?.week}
+        />
       )}
 
       {activeSwaps.length > 0 && (

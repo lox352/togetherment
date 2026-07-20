@@ -1,15 +1,19 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Climbing from "../components/Climbing";
 import { useAuth } from "../contexts/AuthContext";
 import { EMPTY } from "../lib/charm";
-import { useAvailability, useMembers } from "../hooks/useHouseholdData";
-import { firstName, formatRange, memberMap, todayDateString } from "../lib/format";
+import { findClashes } from "../lib/clashes";
+import { useAvailability, useMembers, useRotaData } from "../hooks/useHouseholdData";
+import { firstName, formatDay, formatRange, memberMap, todayDateString } from "../lib/format";
 import { addAvailability, deleteAvailability } from "../lib/mutations";
+import { choreWeekStartDate } from "@togetherment/shared";
 
 export default function AvailabilityPage() {
   const { user } = useAuth();
   const entries = useAvailability();
   const members = useMembers();
+  const rota = useRotaData();
   const byUid = memberMap(members);
 
   const [kind, setKind] = useState<"away" | "guest">("away");
@@ -54,9 +58,34 @@ export default function AvailabilityPage() {
     setNote("");
   };
 
+  const myClashes =
+    user && !rota.loading
+      ? findClashes(
+          user.uid,
+          rota.epochs!,
+          rota.swaps!,
+          rota.overrides!,
+          rota.completions!,
+          entries,
+        )
+      : [];
+
   return (
     <div className="page">
       <h1>Away & guests</h1>
+
+      {myClashes.map((c) => (
+        <div className="notice" key={c.week}>
+          <div className="headline">✈️ That's one of your chore weeks</div>
+          <p className="muted">
+            You have {c.choreCount} chore{c.choreCount === 1 ? "" : "s"} in the week from{" "}
+            {formatDay(choreWeekStartDate(c.week))}, while you're away.
+          </p>
+          <Link to="/rota" className="btn btn-small">
+            Propose a swap
+          </Link>
+        </div>
+      ))}
 
       <div className="card form-grid">
         <div className="segment">

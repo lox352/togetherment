@@ -302,6 +302,22 @@ label.field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.
 }
 .chip.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 
+/* --- heads-up notice (e.g. away during your chore week) --- */
+.notice {
+  background: var(--swap-soft);
+  border: 1px solid var(--swap-ink);
+  border-radius: var(--radius);
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.notice .headline {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--swap-ink);
+  margin-bottom: 0.15rem;
+}
+.notice .btn { margin-top: 0.4rem; display: inline-block; text-decoration: none; }
+
 /* --- celebration banner --- */
 .celebration {
   background: var(--good-soft);
