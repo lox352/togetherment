@@ -238,19 +238,22 @@ async function main() {
   });
   const calendar = google.calendar({ version: "v3", auth });
 
-  // All events this sync has ever created, within a generous window.
+  // Everything currently on the calendar in a wide window. This calendar is
+  // owned solely by the service account (housemates have reader access), so
+  // the sync is the only writer and anything it doesn't want is stale — no
+  // tag filter, which would leave untagged strays orphaned forever.
   const existing = new Map<string, calendar_v3.Schema$Event>();
   let pageToken: string | undefined;
-  const timeMin = new Date(Date.now() - 30 * 86_400_000).toISOString();
-  const timeMax = new Date(Date.now() + (LOOKAHEAD_DAYS + 30) * 86_400_000).toISOString();
+  const timeMin = new Date(Date.now() - 365 * 86_400_000).toISOString();
+  const timeMax = new Date(Date.now() + (LOOKAHEAD_DAYS + 365) * 86_400_000).toISOString();
   do {
     const res = await calendar.events.list({
       calendarId,
-      privateExtendedProperty: ["togetherment=1"],
       timeMin,
       timeMax,
       maxResults: 2500,
       singleEvents: false,
+      showDeleted: false,
       pageToken,
     });
     for (const ev of res.data.items ?? []) {
@@ -301,15 +304,27 @@ async function main() {
     }
   }
 
+  let deleteFailures = 0;
   for (const [id, ev] of existing) {
-    if (!desiredById.has(id) && ev.status !== "cancelled") {
+    if (desiredById.has(id) || ev.status === "cancelled") continue;
+    try {
       await calendar.events.delete({ calendarId, eventId: id });
       deleted++;
+    } catch (err) {
+      const code = (err as { code?: number }).code;
+      // 404/410: already gone. Anything else: report it but keep pruning —
+      // one bad event must not strand every later deletion.
+      if (code !== 404 && code !== 410) {
+        deleteFailures++;
+        console.warn(`Could not delete "${ev.summary ?? id}": ${String(err)}`);
+      }
     }
   }
 
   console.log(
-    `Sync complete: ${inserted} inserted, ${updated} updated, ${unchanged} unchanged, ${deleted} deleted (${desired.length} desired events).`,
+    `Sync complete: ${inserted} inserted, ${updated} updated, ${unchanged} unchanged, ` +
+      `${deleted} deleted, ${existing.size} were on the calendar, ${desired.length} desired.` +
+      (deleteFailures ? ` ${deleteFailures} deletions failed.` : ""),
   );
 }
 
