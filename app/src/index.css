@@ -329,6 +329,30 @@ label.field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.
   padding: 0.5rem 0 0.2rem;
 }
 
+/* Borderless until focused — a capture surface, not a form. */
+.ghost-input {
+  border: 1px solid transparent;
+  background: none;
+  padding: 0.5rem 0.15rem;
+  margin-top: 0.3rem;
+}
+.ghost-input:focus {
+  border-color: var(--line);
+  background: var(--card);
+  padding-left: 0.65rem;
+  outline: none;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .chip-choice {
   border: 1px solid var(--line);
   background: var(--card);

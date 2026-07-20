@@ -73,6 +73,21 @@ export const EMPTY = {
   gatherings: "Nothing planned. Someone say aperitivo? 🥂",
 } as const;
 
+export const HOUSE = {
+  cardTitle: "The house",
+  shoppingHead: "🛒 Shopping",
+  addPlaceholder: "We're low on…",
+  bought: "bought ✓",
+  undo: "undo",
+} as const;
+
+/** A nudge that only makes sense six floors up, when the load gets serious. */
+export function climbLine(itemCount: number): string | null {
+  if (itemCount >= 12) return "Six floors. Consider a delivery. 🛵";
+  if (itemCount >= 8) return "That's a two-bag climb. 🪜";
+  return null;
+}
+
 export const ONE_OFFS = {
   cardTitle: "My week",
   choresHead: "🧹 Chores this week",

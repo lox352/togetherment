@@ -13,7 +13,17 @@ import WeekChores from "../components/WeekChores";
 import { useAuth } from "../contexts/AuthContext";
 import OneOffRow from "../components/OneOffRow";
 import QuickAddOneOff from "../components/QuickAddOneOff";
-import { CELEBRATION, EMPTY, ONE_OFFS, greeting, weekOffLine, weeklyTagline } from "../lib/charm";
+import QuickAddShopping from "../components/QuickAddShopping";
+import ShoppingSection from "../components/ShoppingSection";
+import {
+  CELEBRATION,
+  EMPTY,
+  HOUSE,
+  ONE_OFFS,
+  greeting,
+  weekOffLine,
+  weeklyTagline,
+} from "../lib/charm";
 import { findClashes } from "../lib/clashes";
 import { fireConfetti } from "../lib/confetti";
 import { mine, openOneOffs, sortOneOffs, unassigned } from "../lib/oneOffs";
@@ -22,6 +32,7 @@ import {
   useAvailability,
   useGatherings,
   useRotaData,
+  useShoppingItems,
 } from "../hooks/useHouseholdData";
 import { firstName, formatDay, formatRange, memberMap, todayDateString } from "../lib/format";
 
@@ -31,6 +42,7 @@ export default function DashboardPage() {
   const availability = useAvailability();
   const gatherings = useGatherings();
   const actionItems = useActionItems();
+  const shoppingItems = useShoppingItems();
 
   const weekKey = currentWeekKey();
   const byUid = memberMap(members);
@@ -62,6 +74,7 @@ export default function DashboardPage() {
   const nextGathering = (gatherings ?? [])
     .filter((g) => g.date >= today)
     .sort((a, b) => (a.date < b.date ? -1 : 1))[0];
+  const neededCount = (shoppingItems ?? []).filter((i) => i.status === "needed").length;
   const openItems = openOneOffs(actionItems);
   const myOneOffs = user ? sortOneOffs(mine(openItems, user.uid)) : [];
   const grabbable = sortOneOffs(unassigned(openItems));
@@ -149,21 +162,30 @@ export default function DashboardPage() {
         <QuickAddOneOff members={members ?? []} />
       </div>
 
-      {grabbable.length > 0 && (
-        <div className="card">
-          <h2 style={{ marginTop: 0 }}>{ONE_OFFS.grabsTitle}</h2>
-          <p className="muted">{ONE_OFFS.grabsBlurb}</p>
-          {grabbable.map((v) => (
-            <OneOffRow
-              key={v.item.id}
-              view={v}
-              members={byUid}
-              currentUid={user!.uid}
-              claimable
-            />
-          ))}
-        </div>
-      )}
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>{HOUSE.cardTitle}</h2>
+
+        <p className="subsection">{HOUSE.shoppingHead}</p>
+        <ShoppingSection items={shoppingItems ?? []} limit={6} />
+        <QuickAddShopping listSize={neededCount} />
+
+        {grabbable.length > 0 && (
+          <>
+            <hr className="card-divider" />
+            <p className="subsection">{ONE_OFFS.grabsTitle}</p>
+            <p className="muted">{ONE_OFFS.grabsBlurb}</p>
+            {grabbable.map((v) => (
+              <OneOffRow
+                key={v.item.id}
+                view={v}
+                members={byUid}
+                currentUid={user!.uid}
+                claimable
+              />
+            ))}
+          </>
+        )}
+      </div>
 
       {week && week.epoch && (
         <div className="card">
@@ -240,6 +262,8 @@ export default function DashboardPage() {
 
       <p className="muted" style={{ textAlign: "center" }}>
         <Link to="/actions">All one-offs →</Link>
+        {" · "}
+        <Link to="/shopping">Full shopping list →</Link>
       </p>
     </div>
   );
