@@ -4,6 +4,7 @@ import type {
   AvailabilityEntry,
   CompletionSpec,
   Gathering,
+  ManualEntry,
   Member,
   OverrideSpec,
   RotaEpoch,
@@ -146,6 +147,23 @@ export function useAvailability(): AvailabilityEntry[] | undefined {
         endDate: d.endDate,
         note: d.note ?? undefined,
         createdBy: d.createdBy,
+      };
+    },
+  );
+}
+
+export function useManual(): ManualEntry[] | undefined {
+  return useCollection(
+    () => query(collection(db, "manual")),
+    (snap): ManualEntry => {
+      const d = snap.data();
+      return {
+        id: snap.id,
+        title: d.title ?? "",
+        body: d.body ?? "",
+        category: d.category ?? "other",
+        updatedBy: d.updatedBy ?? "",
+        updatedAtMillis: millis(d.updatedAt),
       };
     },
   );

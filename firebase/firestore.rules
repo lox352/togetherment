@@ -70,5 +70,6 @@ service cloud.firestore {
     match /actionItems/{id}   { allow read, write: if isMember(); }
     match /availability/{id}  { allow read, write: if isMember(); }
     match /gatherings/{id}    { allow read, write: if isMember(); }
+    match /manual/{id}        { allow read, write: if isMember(); }
   }
 }

@@ -14,6 +14,7 @@ import {
   dateStringInTz,
   HOUSEHOLD_TZ,
   parseEpochDoc,
+  type ActionItem,
   type AvailabilityEntry,
   type Gathering,
   type Member,
@@ -60,15 +61,23 @@ async function loadFirestore() {
   });
   const db = getFirestore();
 
-  const [epochsSnap, swapsSnap, overridesSnap, membersSnap, availabilitySnap, gatheringsSnap] =
-    await Promise.all([
-      db.collection("rotaEpochs").get(),
-      db.collection("swaps").get(),
-      db.collection("overrides").get(),
-      db.collection("members").get(),
-      db.collection("availability").get(),
-      db.collection("gatherings").get(),
-    ]);
+  const [
+    epochsSnap,
+    swapsSnap,
+    overridesSnap,
+    membersSnap,
+    availabilitySnap,
+    gatheringsSnap,
+    actionItemsSnap,
+  ] = await Promise.all([
+    db.collection("rotaEpochs").get(),
+    db.collection("swaps").get(),
+    db.collection("overrides").get(),
+    db.collection("members").get(),
+    db.collection("availability").get(),
+    db.collection("gatherings").get(),
+    db.collection("actionItems").get(),
+  ]);
 
   const epochs: RotaEpoch[] = epochsSnap.docs.map((doc) =>
     parseEpochDoc(doc.id, doc.data()),
@@ -129,11 +138,24 @@ async function loadFirestore() {
     };
   });
 
-  return { epochs, swaps, overrides, members, availability, gatherings };
+  const actionItems: ActionItem[] = actionItemsSnap.docs.map((doc) => {
+    const d = doc.data();
+    return {
+      id: doc.id,
+      title: d.title,
+      assigneeUid: d.assigneeUid ?? undefined,
+      createdBy: d.createdBy,
+      createdAtMillis: d.createdAt ? (d.createdAt as Timestamp).toMillis() : 0,
+      dueDate: d.dueDate ?? undefined,
+      status: d.status ?? "open",
+    };
+  });
+
+  return { epochs, swaps, overrides, members, availability, gatherings, actionItems };
 }
 
 function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): DesiredEvent[] {
-  const { epochs, swaps, overrides, members, availability, gatherings } = data;
+  const { epochs, swaps, overrides, members, availability, gatherings, actionItems } = data;
   const events: DesiredEvent[] = [];
   const today = dateStringInTz(new Date());
   const horizon = addDays(today, LOOKAHEAD_DAYS);
@@ -179,6 +201,20 @@ function buildDesiredEvents(data: Awaited<ReturnType<typeof loadFirestore>>): De
       ...(a.note ? { description: a.note } : {}),
       start: { date: a.startDate },
       end: { date: addDays(a.endDate, 1) },
+    });
+  }
+
+  // One-offs with a due date. Undated ones stay off the calendar — they'd
+  // litter it with all-day entries that mean nothing in particular.
+  for (const item of actionItems) {
+    if (item.status !== "open" || !item.dueDate) continue;
+    if (item.dueDate < today || item.dueDate > horizon) continue;
+    const who = item.assigneeUid ? firstName(members, item.assigneeUid) : "unclaimed";
+    events.push({
+      id: eventId(`action|${item.id}`),
+      summary: `📌 ${item.title} — ${who}`,
+      start: { date: item.dueDate },
+      end: { date: addDays(item.dueDate, 1) },
     });
   }
 

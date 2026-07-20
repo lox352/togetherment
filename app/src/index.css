@@ -375,6 +375,17 @@ label.field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.
 }
 .chip-choice.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+/* --- house manual --- */
+.manual-body { white-space: pre-wrap; margin: 0.4rem 0; }
+
+.wifi-qr { text-align: center; margin: 0.6rem 0; }
+.wifi-qr svg {
+  width: min(180px, 60vw);
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
 /* --- heads-up notice (e.g. away during your chore week) --- */
 .notice {
   background: var(--swap-soft);

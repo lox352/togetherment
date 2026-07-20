@@ -5,7 +5,7 @@ import {
   currentWeekKey,
 } from "@togetherment/shared";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Avatar from "../components/Avatar";
 import Climbing from "../components/Climbing";
@@ -27,6 +27,7 @@ import {
 import { findClashes } from "../lib/clashes";
 import { fireConfetti } from "../lib/confetti";
 import { mine, openOneOffs, sortOneOffs, unassigned } from "../lib/oneOffs";
+import { shareText, weekSummary } from "../lib/share";
 import {
   useActionItems,
   useAvailability,
@@ -86,6 +87,28 @@ export default function DashboardPage() {
     loading || !user || availability === undefined
       ? []
       : findClashes(user.uid, epochs!, swaps!, overrides!, completions!, availability);
+
+  const [shareState, setShareState] = useState("");
+  const share = async () => {
+    const result = await shareText(
+      weekSummary({
+        week: weekKey,
+        assignments: week,
+        members: byUid,
+        shopping: shoppingItems ?? [],
+        availability: availability ?? [],
+        gathering: nextGathering,
+        today,
+      }),
+    );
+    setShareState(
+      result === "copied"
+        ? "Copied ✓ — paste it in the group"
+        : result === "failed"
+          ? "Couldn't share — try again?"
+          : "",
+    );
+  };
 
   if (loading) {
     return <Climbing />;
@@ -255,6 +278,13 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <div className="card" style={{ textAlign: "center" }}>
+        <button className="btn" onClick={() => void share()}>
+          📤 Share this week
+        </button>
+        {shareState && <p className="muted">{shareState}</p>}
+      </div>
 
       <p className="muted" style={{ textAlign: "center" }}>
         <Link to="/actions">All one-offs →</Link>

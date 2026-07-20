@@ -1,6 +1,7 @@
 import {
   weekStartUtcMillis,
   type Chore,
+  type ManualCategory,
   type RotaEpoch,
   type WeekKey,
 } from "@togetherment/shared";
@@ -206,6 +207,51 @@ export function addAvailability(input: {
 
 export function deleteAvailability(id: string) {
   return withSync(deleteDoc(doc(db, "availability", id)));
+}
+
+// --- house manual ---
+
+export function saveManualEntry(
+  entry: { id?: string; title: string; body: string; category: ManualCategory },
+  uid: string,
+) {
+  const payload = {
+    title: entry.title,
+    body: entry.body,
+    category: entry.category,
+    updatedBy: uid,
+    updatedAt: serverTimestamp(),
+  };
+  return entry.id
+    ? setDoc(doc(db, "manual", entry.id), payload, { merge: true })
+    : addDoc(collection(db, "manual"), payload);
+}
+
+export function deleteManualEntry(id: string) {
+  return deleteDoc(doc(db, "manual", id));
+}
+
+/** Stub entries to fill in — an empty manual is harder to start than a sketched one. */
+export const MANUAL_SEEDS: Array<{ title: string; category: ManualCategory; body: string }> = [
+  { title: "Wifi", category: "wifi", body: "network:\npassword:" },
+  { title: "Bin & recycling night", category: "bins", body: "Set out after 8pm on:" },
+  { title: "Super", category: "contacts", body: "name:\nphone:" },
+  { title: "Landlord / management", category: "contacts", body: "name:\nphone:\nemail:" },
+  { title: "Buzzer & packages", category: "building", body: "" },
+  { title: "Radiators & boiler", category: "appliances", body: "" },
+  { title: "Laundry", category: "appliances", body: "" },
+];
+
+export function seedManual(uid: string) {
+  return Promise.all(
+    MANUAL_SEEDS.map((s) =>
+      addDoc(collection(db, "manual"), {
+        ...s,
+        updatedBy: uid,
+        updatedAt: serverTimestamp(),
+      }),
+    ),
+  );
 }
 
 // --- gatherings ---

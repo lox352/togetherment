@@ -6,6 +6,7 @@ import ActionsPage from "./pages/ActionsPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import DashboardPage from "./pages/DashboardPage";
 import GatheringsPage from "./pages/GatheringsPage";
+import ManualPage from "./pages/ManualPage";
 import RotaPage from "./pages/RotaPage";
 import SettingsPage from "./pages/SettingsPage";
 import ShoppingPage from "./pages/ShoppingPage";
@@ -55,6 +56,7 @@ function MorePage() {
       <nav className="more-list">
         <NavLink to="/actions" className="more-link">📌 One-offs</NavLink>
         <NavLink to="/gatherings" className="more-link">🍽️ Gatherings</NavLink>
+        <NavLink to="/manual" className="more-link">📖 House manual</NavLink>
         <NavLink to="/settings" className="more-link">⚙️ Settings</NavLink>
       </nav>
     </div>
@@ -78,6 +80,7 @@ export default function App() {
           <Route path="/availability" element={<AvailabilityPage />} />
           <Route path="/actions" element={<ActionsPage />} />
           <Route path="/gatherings" element={<GatheringsPage />} />
+          <Route path="/manual" element={<ManualPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/more" element={<MorePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

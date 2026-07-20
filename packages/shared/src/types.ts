@@ -115,6 +115,24 @@ export interface AvailabilityEntry {
   createdBy: string;
 }
 
+export type ManualCategory =
+  | "wifi"
+  | "building"
+  | "bins"
+  | "appliances"
+  | "contacts"
+  | "other";
+
+/** A piece of house knowledge: wifi, bin night, boiler quirks, the super's number. */
+export interface ManualEntry {
+  id: string;
+  title: string;
+  body: string;
+  category: ManualCategory;
+  updatedBy: string;
+  updatedAtMillis: number;
+}
+
 export interface Gathering {
   id: string;
   title: string;
