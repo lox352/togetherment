@@ -113,6 +113,36 @@ describe("baseAssignments", () => {
   });
 });
 
+describe("wholeWeek mode", () => {
+  const solo = () => epoch({ assignmentMode: "wholeWeek" as const });
+
+  it("gives every chore that week to one person", () => {
+    const a = baseAssignments(solo(), "2026-W30");
+    expect(new Set(a.map((x) => x.assigneeUid)).size).toBe(1);
+    expect(a).toHaveLength(CHORES.length);
+  });
+
+  it("rotates the duty week by week, equally over a full cycle", () => {
+    const owners = [0, 1, 2, 3, 4, 5].map(
+      (w) => baseAssignments(solo(), addWeeks("2026-W30", w))[0]!.assigneeUid,
+    );
+    expect(owners).toEqual(["alice", "bob", "carol", "alice", "bob", "carol"]);
+  });
+
+  it("leaves perChore epochs (and epochs written before the setting existed) untouched", () => {
+    const before = baseAssignments(epoch(), "2026-W30");
+    expect(new Set(before.map((x) => x.assigneeUid)).size).toBe(3);
+    const explicit = baseAssignments(epoch({ assignmentMode: "perChore" }), "2026-W30");
+    expect(explicit).toEqual(before);
+  });
+
+  it("swaps hand over the whole week to the other person", () => {
+    const s = swap({ weekA: "2026-W30", memberA: "alice", weekB: "2026-W33", memberB: "bob" });
+    const w = computeWeek({ epochs: [solo()], week: "2026-W30", swaps: [s] });
+    expect(w.assignments.every((a) => a.assigneeUid === "bob")).toBe(true);
+  });
+});
+
 describe("swaps", () => {
   it("swaps whole weeks in both directions", () => {
     const s = swap({});

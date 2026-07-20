@@ -4,6 +4,7 @@ import {
   currentWeekKey,
   nextEpochStartWeek,
   resolveEpoch,
+  type AssignmentMode,
   type Chore,
   type RotaEpoch,
 } from "@togetherment/shared";
@@ -58,6 +59,7 @@ export default function SettingsPage() {
 
   const [chores, setChores] = useState<Chore[] | null>(null);
   const [memberOrder, setMemberOrder] = useState<string[] | null>(null);
+  const [mode, setMode] = useState<AssignmentMode>("wholeWeek");
   const [newChore, setNewChore] = useState("");
   const [newSubs, setNewSubs] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -84,6 +86,7 @@ export default function SettingsPage() {
         ? source.memberIds
         : members!.filter((m) => m.active).map((m) => m.uid),
     );
+    setMode(source?.assignmentMode ?? "wholeWeek");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
@@ -139,6 +142,7 @@ export default function SettingsPage() {
         memberIds: memberOrder,
         chores,
         startOffset: currentEpoch ? continuedStartOffset(currentEpoch, targetWeek) : 0,
+        assignmentMode: mode,
       };
       await saveEpoch(epoch, user!.uid);
       setStatus("saved");
@@ -240,6 +244,29 @@ export default function SettingsPage() {
             Add
           </button>
         </form>
+      </div>
+
+      <h2>How chores are shared</h2>
+      <div className="card">
+        <div className="segment">
+          <button
+            className={mode === "wholeWeek" ? "on" : ""}
+            onClick={() => setMode("wholeWeek")}
+          >
+            One person a week
+          </button>
+          <button
+            className={mode === "perChore" ? "on" : ""}
+            onClick={() => setMode("perChore")}
+          >
+            Split every week
+          </button>
+        </div>
+        <p className="muted">
+          {mode === "wholeWeek"
+            ? "One housemate does every chore that week, then it passes to the next person."
+            : "Chores are divided between everyone each week."}
+        </p>
       </div>
 
       <h2>Rotation order</h2>

@@ -51,6 +51,7 @@ export function useEpochs(): RotaEpoch[] | undefined {
         memberIds: d.memberIds ?? [],
         chores: d.chores ?? [],
         startOffset: d.startOffset ?? 0,
+        assignmentMode: d.assignmentMode ?? undefined,
       };
     },
   );

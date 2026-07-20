@@ -26,11 +26,21 @@ export interface Chore {
  * An append-only snapshot of rota configuration, effective from `startWeek`
  * (always a Monday boundary). Doc ID in Firestore = startWeek.
  */
+/**
+ * How chores are shared out each week.
+ * - "wholeWeek": one person does every chore that week, rotating weekly.
+ * - "perChore": chores are split between everyone each week (the original mode).
+ * Absent means "perChore" so epochs written before this setting existed keep
+ * resolving exactly as they always did.
+ */
+export type AssignmentMode = "wholeWeek" | "perChore";
+
 export interface RotaEpoch {
   startWeek: WeekKey;
   memberIds: string[]; // ordered — the rotation order
   chores: Chore[]; // ordered
   startOffset: number; // rotation phase at startWeek (carried over between epochs)
+  assignmentMode?: AssignmentMode;
 }
 
 export interface SwapSpec {

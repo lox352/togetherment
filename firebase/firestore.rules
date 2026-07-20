@@ -12,6 +12,9 @@ service cloud.firestore {
         && request.auth.token.email in [
              'lachlan.sh@gmail.com',
              'stefano.pizzoli9898@gmail.com',
+             // Gmail ignores dots, Firebase does not — list the exact address
+             // each person signs in with.
+             'alex.chin13@gmail.com',
              'alexchin13@gmail.com'
            ];
     }

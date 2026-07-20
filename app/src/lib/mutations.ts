@@ -92,6 +92,7 @@ export function saveEpoch(epoch: RotaEpoch, createdBy: string) {
           : {}),
       })),
       startOffset: epoch.startOffset,
+      assignmentMode: epoch.assignmentMode ?? "wholeWeek",
       startAtMillis: weekStartUtcMillis(epoch.startWeek),
       createdBy,
       createdAt: serverTimestamp(),

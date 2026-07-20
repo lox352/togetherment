@@ -46,16 +46,19 @@ export function offsetForWeek(epoch: RotaEpoch, week: WeekKey): number {
 }
 
 /**
- * Base round-robin: chore at index i goes to memberIds[(i + offset) mod N].
- * With C chores and N members each member gets floor(C/N) or ceil(C/N) chores,
- * and both the chores and the "extra chore" burden rotate weekly.
+ * Base round-robin.
+ * - "wholeWeek": every chore goes to memberIds[offset mod N] — one person owns
+ *   the week, and the duty rotates so everyone takes an equal number of weeks.
+ * - "perChore": chore at index i goes to memberIds[(i + offset) mod N], so each
+ *   member gets floor(C/N) or ceil(C/N) chores and the extra burden rotates.
  */
 export function baseAssignments(epoch: RotaEpoch, week: WeekKey): ChoreAssignment[] {
   const n = epoch.memberIds.length;
   if (n === 0) return [];
   const offset = offsetForWeek(epoch, week);
+  const wholeWeek = (epoch.assignmentMode ?? "perChore") === "wholeWeek";
   return epoch.chores.map((chore, i) => {
-    const uid = epoch.memberIds[mod(i + offset, n)]!;
+    const uid = epoch.memberIds[mod(wholeWeek ? offset : i + offset, n)]!;
     return {
       chore,
       assigneeUid: uid,
