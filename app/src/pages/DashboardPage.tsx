@@ -11,9 +11,12 @@ import Avatar from "../components/Avatar";
 import Climbing from "../components/Climbing";
 import WeekChores from "../components/WeekChores";
 import { useAuth } from "../contexts/AuthContext";
-import { CELEBRATION, greeting, weeklyTagline } from "../lib/charm";
+import OneOffRow from "../components/OneOffRow";
+import QuickAddOneOff from "../components/QuickAddOneOff";
+import { CELEBRATION, EMPTY, ONE_OFFS, greeting, weekOffLine, weeklyTagline } from "../lib/charm";
 import { findClashes } from "../lib/clashes";
 import { fireConfetti } from "../lib/confetti";
+import { mine, openOneOffs, sortOneOffs, unassigned } from "../lib/oneOffs";
 import {
   useActionItems,
   useAvailability,
@@ -59,8 +62,11 @@ export default function DashboardPage() {
   const nextGathering = (gatherings ?? [])
     .filter((g) => g.date >= today)
     .sort((a, b) => (a.date < b.date ? -1 : 1))[0];
-  const myActions = (actionItems ?? []).filter(
-    (a) => a.status === "open" && a.assigneeUid === user?.uid,
+  const openItems = openOneOffs(actionItems);
+  const myOneOffs = user ? sortOneOffs(mine(openItems, user.uid)) : [];
+  const grabbable = sortOneOffs(unassigned(openItems));
+  const othersOneOffs = sortOneOffs(
+    openItems.filter((i) => i.assigneeUid && i.assigneeUid !== user?.uid),
   );
 
   const clashes =
@@ -100,34 +106,84 @@ export default function DashboardPage() {
       ))}
 
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>
-          My chores{" "}
-          <span className="muted" style={{ textTransform: "none", letterSpacing: 0 }}>
-            {formatDay(choreWeekStartDate(weekKey))} – {formatDay(choreWeekEndDate(weekKey))}
-          </span>
-        </h2>
+        <h2 style={{ marginTop: 0 }}>{ONE_OFFS.cardTitle}</h2>
+
         {allMineDone && (
           <div className="celebration">
             <div className="headline">{CELEBRATION.headline}</div>
             <div className="muted">{CELEBRATION.sub}</div>
           </div>
         )}
-        <p className="muted">New week every Friday — aim to be done by Monday night.</p>
+
+        {myChores.length === 0 && myOneOffs.length === 0 && week && week.epoch && (
+          <p className="muted">{EMPTY.myWeek}</p>
+        )}
+
+        <p className="subsection">
+          {ONE_OFFS.choresHead} · {formatDay(choreWeekStartDate(weekKey))} –{" "}
+          {formatDay(choreWeekEndDate(weekKey))}
+        </p>
         {!week || !week.epoch ? (
           <p className="muted">
             No rota yet — set up chores in <Link to="/settings">Settings</Link>.
           </p>
         ) : myChores.length === 0 ? (
-          <p className="muted">Nothing this week 🎉</p>
+          <p className="muted">{weekOffLine(weekKey, user!.uid)}</p>
         ) : (
-          <WeekChores week={week} members={byUid} ticksEnabled onlyUid={user!.uid} />
+          <>
+            <WeekChores week={week} members={byUid} ticksEnabled onlyUid={user!.uid} />
+            <p className="muted">Done by Monday night, ideally.</p>
+          </>
         )}
+
+        <hr className="card-divider" />
+
+        <p className="subsection">{ONE_OFFS.oneOffsHead}</p>
+        {myOneOffs.length === 0 ? (
+          <p className="muted">{EMPTY.oneOffs}</p>
+        ) : (
+          myOneOffs.map((v) => (
+            <OneOffRow key={v.item.id} view={v} members={byUid} currentUid={user!.uid} />
+          ))
+        )}
+        <QuickAddOneOff members={members ?? []} />
       </div>
+
+      {grabbable.length > 0 && (
+        <div className="card">
+          <h2 style={{ marginTop: 0 }}>{ONE_OFFS.grabsTitle}</h2>
+          <p className="muted">{ONE_OFFS.grabsBlurb}</p>
+          {grabbable.map((v) => (
+            <OneOffRow
+              key={v.item.id}
+              view={v}
+              members={byUid}
+              currentUid={user!.uid}
+              claimable
+            />
+          ))}
+        </div>
+      )}
 
       {week && week.epoch && (
         <div className="card">
           <h2 style={{ marginTop: 0 }}>Everyone</h2>
           <WeekChores week={week} members={byUid} ticksEnabled />
+          {othersOneOffs.length > 0 && (
+            <>
+              <hr className="card-divider" />
+              <p className="subsection">{ONE_OFFS.oneOffsHead}</p>
+              {othersOneOffs.map((v) => (
+                <OneOffRow
+                  key={v.item.id}
+                  view={v}
+                  members={byUid}
+                  currentUid={user!.uid}
+                  showAssignee
+                />
+              ))}
+            </>
+          )}
           <Link to="/rota" className="muted">
             Full rota & swaps →
           </Link>
@@ -182,20 +238,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {myActions.length > 0 && (
-        <div className="card">
-          <h2 style={{ marginTop: 0 }}>My action items</h2>
-          {myActions.map((a) => (
-            <div className="list-row" key={a.id}>
-              <div className="grow">
-                {a.title}
-                {a.dueDate && <div className="muted">by {formatDay(a.dueDate)}</div>}
-              </div>
-            </div>
-          ))}
-          <Link to="/actions" className="muted">All action items →</Link>
-        </div>
-      )}
+      <p className="muted" style={{ textAlign: "center" }}>
+        <Link to="/actions">All one-offs →</Link>
+      </p>
     </div>
   );
 }

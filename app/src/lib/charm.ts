@@ -67,8 +67,23 @@ export function climbingLine(now: Date = new Date()): string {
 export const EMPTY = {
   shopping: "Cupboards full, fridge happy. 🧀",
   actions: "Nothing on the list. Il dolce far niente. 🛋️",
+  oneOffs: "Nothing on your plate. Il dolce far niente. 🛋️",
+  myWeek: "Clean slate. Enjoy the view. 🌇",
   availability: "Full house — everyone home, six floors up. 🏠",
   gatherings: "Nothing planned. Someone say aperitivo? 🥂",
+} as const;
+
+export const ONE_OFFS = {
+  cardTitle: "My week",
+  choresHead: "🧹 Chores this week",
+  oneOffsHead: "📌 One-offs",
+  addTrigger: "+ Add a one-off",
+  addPlaceholder: "e.g. buy a side lamp for the living room",
+  anyone: "Anyone 🙋",
+  grabsTitle: "Up for grabs 🙋",
+  grabsBlurb: "No owner yet. Be a hero.",
+  claim: "I'll do it 🙋",
+  archive: "Recently sorted ✅",
 } as const;
 
 const WEEK_OFF = [

@@ -143,13 +143,14 @@ export function deleteShoppingItem(id: string) {
 
 export function addActionItem(input: {
   title: string;
-  assigneeUid: string;
+  /** Omit to leave it up for grabs. */
+  assigneeUid?: string;
   dueDate?: string;
   createdBy: string;
 }) {
   return addDoc(collection(db, "actionItems"), {
     title: input.title,
-    assigneeUid: input.assigneeUid,
+    ...(input.assigneeUid ? { assigneeUid: input.assigneeUid } : {}),
     ...(input.dueDate ? { dueDate: input.dueDate } : {}),
     createdBy: input.createdBy,
     createdAt: serverTimestamp(),
@@ -166,6 +167,16 @@ export function setActionItemStatus(id: string, done: boolean) {
 
 export function deleteActionItem(id: string) {
   return deleteDoc(doc(db, "actionItems", id));
+}
+
+/** Take ownership of an unassigned one-off. */
+export function claimActionItem(id: string, uid: string) {
+  return updateDoc(doc(db, "actionItems", id), { assigneeUid: uid });
+}
+
+/** Put a one-off back in the up-for-grabs pile. */
+export function releaseActionItem(id: string) {
+  return updateDoc(doc(db, "actionItems", id), { assigneeUid: deleteField() });
 }
 
 // --- availability ---

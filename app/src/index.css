@@ -302,6 +302,44 @@ label.field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.
 }
 .chip.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 
+/* --- one-offs inside the "My week" card --- */
+.subsection {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+.card-divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 0.9rem 0;
+}
+.badge-overdue { background: var(--accent-soft); color: var(--accent); }
+.meta-line { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+
+.add-trigger {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 0 0.2rem;
+}
+
+.chip-choice {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.chip-choice.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
 /* --- heads-up notice (e.g. away during your chore week) --- */
 .notice {
   background: var(--swap-soft);

@@ -95,7 +95,8 @@ export interface ShoppingItem {
 export interface ActionItem {
   id: string;
   title: string;
-  assigneeUid: string;
+  /** Absent means nobody has claimed it yet — it's up for grabs. */
+  assigneeUid?: string;
   createdBy: string;
   createdAtMillis: number;
   dueDate?: string; // "YYYY-MM-DD"

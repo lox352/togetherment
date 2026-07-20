@@ -121,7 +121,7 @@ export function useActionItems(): ActionItem[] | undefined {
       return {
         id: snap.id,
         title: d.title,
-        assigneeUid: d.assigneeUid,
+        assigneeUid: d.assigneeUid ?? undefined,
         createdBy: d.createdBy,
         createdAtMillis: millis(d.createdAt),
         dueDate: d.dueDate ?? undefined,

@@ -53,7 +53,7 @@ function MorePage() {
     <div className="page">
       <h1>More</h1>
       <nav className="more-list">
-        <NavLink to="/actions" className="more-link">📌 Action items</NavLink>
+        <NavLink to="/actions" className="more-link">📌 One-offs</NavLink>
         <NavLink to="/gatherings" className="more-link">🍽️ Gatherings</NavLink>
         <NavLink to="/settings" className="more-link">⚙️ Settings</NavLink>
       </nav>
