@@ -64,13 +64,7 @@ function MorePage() {
 export default function App() {
   const { user, denied } = useAuth();
 
-  if (user === undefined) {
-    return (
-      <div className="centered-screen">
-        <Climbing />
-      </div>
-    );
-  }
+  if (user === undefined) return <Climbing />;
   if (user === null) return <SignInScreen />;
   if (denied) return <DeniedScreen />;
 

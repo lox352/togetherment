@@ -24,11 +24,7 @@ export default function GatheringsPage() {
   const [error, setError] = useState("");
 
   if (gatherings === undefined || members === undefined) {
-    return (
-      <div className="page">
-        <Climbing />
-      </div>
-    );
+    return <Climbing />;
   }
 
   const today = todayDateString();

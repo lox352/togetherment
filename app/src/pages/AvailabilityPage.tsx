@@ -25,11 +25,7 @@ export default function AvailabilityPage() {
   const [error, setError] = useState("");
 
   if (entries === undefined || members === undefined) {
-    return (
-      <div className="page">
-        <Climbing />
-      </div>
-    );
+    return <Climbing />;
   }
 
   const today = todayDateString();

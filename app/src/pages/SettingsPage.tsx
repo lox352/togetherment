@@ -91,11 +91,7 @@ export default function SettingsPage() {
   }, [loading]);
 
   if (loading || chores === null || memberOrder === null) {
-    return (
-      <div className="page">
-        <Climbing />
-      </div>
-    );
+    return <Climbing />;
   }
 
   const byUid = new Map(members!.map((m) => [m.uid, m]));

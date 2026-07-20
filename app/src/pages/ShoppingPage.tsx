@@ -15,11 +15,7 @@ export default function ShoppingPage() {
   const byUid = memberMap(members);
 
   if (items === undefined) {
-    return (
-      <div className="page">
-        <Climbing />
-      </div>
-    );
+    return <Climbing />;
   }
 
   const needed = items.filter((i) => i.status === "needed");

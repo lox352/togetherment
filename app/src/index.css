@@ -97,6 +97,17 @@ p { margin: 0.4rem 0; }
   padding: 2rem;
   text-align: center;
 }
+/* Same geometry wherever it appears, so handing from one loading screen
+   to the next doesn't move the message. */
+.loading-state {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+}
+
 .centered-screen h1 { font-size: 2.2rem; margin-bottom: 0; }
 .centered-screen .walkup { width: min(200px, 48vw); height: auto; margin-bottom: 0.5rem; }
 

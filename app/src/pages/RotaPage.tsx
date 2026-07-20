@@ -24,11 +24,7 @@ export default function RotaPage() {
   const [swapOpen, setSwapOpen] = useState(false);
 
   if (loading) {
-    return (
-      <div className="page">
-        <Climbing />
-      </div>
-    );
+    return <Climbing />;
   }
 
   const myClashes =

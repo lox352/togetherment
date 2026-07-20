@@ -88,11 +88,7 @@ export default function DashboardPage() {
       : findClashes(user.uid, epochs!, swaps!, overrides!, completions!, availability);
 
   if (loading) {
-    return (
-      <div className="page">
-        <Climbing />
-      </div>
-    );
+    return <Climbing />;
   }
 
   const myFirstName = user?.displayName?.split(" ")[0] ?? "neighbour";

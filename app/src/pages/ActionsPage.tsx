@@ -16,11 +16,7 @@ export default function ActionsPage() {
   const byUid = memberMap(members);
 
   if (items === undefined || members === undefined) {
-    return (
-      <div className="page">
-        <Climbing />
-      </div>
-    );
+    return <Climbing />;
   }
 
   const open = openOneOffs(items);
