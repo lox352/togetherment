@@ -13,6 +13,7 @@ import {
   currentWeekKey,
   dateStringInTz,
   HOUSEHOLD_TZ,
+  parseEpochDoc,
   type AvailabilityEntry,
   type Gathering,
   type Member,
@@ -69,15 +70,9 @@ async function loadFirestore() {
       db.collection("gatherings").get(),
     ]);
 
-  const epochs: RotaEpoch[] = epochsSnap.docs.map((doc) => {
-    const d = doc.data();
-    return {
-      startWeek: d.startWeek ?? doc.id,
-      memberIds: d.memberIds ?? [],
-      chores: d.chores ?? [],
-      startOffset: d.startOffset ?? 0,
-    };
-  });
+  const epochs: RotaEpoch[] = epochsSnap.docs.map((doc) =>
+    parseEpochDoc(doc.id, doc.data()),
+  );
   const swaps: SwapSpec[] = swapsSnap.docs.map((doc) => {
     const d = doc.data();
     return {

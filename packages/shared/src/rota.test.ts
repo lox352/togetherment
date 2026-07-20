@@ -6,6 +6,7 @@ import {
   nextEpochStartWeek,
   resolveEpoch,
 } from "./rota";
+import { parseEpochDoc } from "./parse";
 import type { RotaEpoch, SwapSpec } from "./types";
 import { addWeeks } from "./week";
 
@@ -110,6 +111,30 @@ describe("baseAssignments", () => {
     const b = baseAssignments(epoch({ startOffset: 1 }), "2026-W30");
     expect(a[0]!.assigneeUid).toBe("alice");
     expect(b[0]!.assigneeUid).toBe("bob");
+  });
+});
+
+describe("parseEpochDoc", () => {
+  it("keeps assignmentMode so the app and calendar sync agree", () => {
+    const parsed = parseEpochDoc("2026-W30", {
+      startWeek: "2026-W30",
+      memberIds: ["alice", "bob"],
+      chores: CHORES,
+      startOffset: 2,
+      assignmentMode: "wholeWeek",
+    });
+    expect(parsed.assignmentMode).toBe("wholeWeek");
+    expect(baseAssignments(parsed, "2026-W30").every((a) => a.assigneeUid === "carol")).toBe(false);
+    expect(new Set(baseAssignments(parsed, "2026-W30").map((a) => a.assigneeUid)).size).toBe(1);
+  });
+
+  it("falls back to the document id and safe defaults", () => {
+    const parsed = parseEpochDoc("2026-W31", {});
+    expect(parsed.startWeek).toBe("2026-W31");
+    expect(parsed.memberIds).toEqual([]);
+    expect(parsed.chores).toEqual([]);
+    expect(parsed.startOffset).toBe(0);
+    expect(parsed.assignmentMode).toBeUndefined();
   });
 });
 

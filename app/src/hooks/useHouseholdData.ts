@@ -1,3 +1,4 @@
+import { parseEpochDoc } from "@togetherment/shared";
 import type {
   ActionItem,
   AvailabilityEntry,
@@ -44,16 +45,7 @@ export function useMembers(): Member[] | undefined {
 export function useEpochs(): RotaEpoch[] | undefined {
   return useCollection(
     () => query(collection(db, "rotaEpochs")),
-    (snap): RotaEpoch => {
-      const d = snap.data();
-      return {
-        startWeek: d.startWeek ?? snap.id,
-        memberIds: d.memberIds ?? [],
-        chores: d.chores ?? [],
-        startOffset: d.startOffset ?? 0,
-        assignmentMode: d.assignmentMode ?? undefined,
-      };
-    },
+    (snap): RotaEpoch => parseEpochDoc(snap.id, snap.data()),
   );
 }
 
